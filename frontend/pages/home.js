@@ -62,6 +62,14 @@ export default function Home() {
         >
           Reserve a Stall
         </button>
+        {user.role === 'ADMIN' && (
+          <button
+            onClick={() => router.push('/admin-panel')}
+            style={styles.adminButton}
+          >
+            Admin Panel
+          </button>
+        )}
       </div>
 
       <form onSubmit={handleSaveGenres} style={styles.form}>
@@ -114,6 +122,17 @@ const styles = {
   primaryButton: {
     padding: "15px 30px",
     backgroundColor: "#4caf50",
+    color: "white",
+    border: "none",
+    borderRadius: "5px",
+    cursor: "pointer",
+    fontSize: "16px",
+    fontWeight: "bold",
+    marginRight: "10px"
+  },
+  adminButton: {
+    padding: "15px 30px",
+    backgroundColor: "#ff9800",
     color: "white",
     border: "none",
     borderRadius: "5px",

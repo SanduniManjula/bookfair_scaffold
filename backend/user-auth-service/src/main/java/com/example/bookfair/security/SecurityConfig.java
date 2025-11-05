@@ -33,6 +33,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/reservations/all").permitAll()
                         .requestMatchers("/api/reservations/my-reservations").authenticated()
                         .requestMatchers("/api/reservations/reserve").authenticated()
+                        .requestMatchers("/api/admin/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
