@@ -10,6 +10,12 @@ frontend/out/
 frontend/.env
 frontend/.env.local
 
+# Backend environment files
+backend/**/.env
+backend/**/.env.local
+.env
+.env.local
+
 # IDE / system
 .idea/
 .DS_Store

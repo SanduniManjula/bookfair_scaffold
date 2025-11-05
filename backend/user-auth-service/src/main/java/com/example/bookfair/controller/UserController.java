@@ -3,7 +3,9 @@ package com.example.bookfair.user.controller;
 import com.example.bookfair.user.model.User;
 import com.example.bookfair.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.*;
 
 @RestController
@@ -15,8 +17,8 @@ public class UserController {
     private UserRepository userRepository;
 
     @PostMapping("/genres")
-    public Map<String, Object> updateGenres(@RequestBody Map<String, String> request) {
-        String email = request.get("email");
+    public Map<String, Object> updateGenres(@RequestBody Map<String, String> request, Authentication authentication) {
+        String email = authentication.getName();
         String genres = request.get("genres");
 
         Optional<User> userOpt = userRepository.findByEmail(email);
@@ -31,4 +33,3 @@ public class UserController {
         return Map.of("message", "Genres updated");
     }
 }
-
