@@ -91,6 +91,14 @@ public class ReservationController {
             reservation.setStall(stall);
             reservation = resRepo.save(reservation);
 
+            // Send reservation request email (immediately after creation)
+            try {
+                emailService.sendReservationRequestEmail(user, stall, reservation);
+            } catch (Exception e) {
+                // Log error but don't fail the reservation
+                System.err.println("Failed to send reservation request email: " + e.getMessage());
+            }
+
             // Generate QR code
             String qrText = String.format("Bookfair-%d-%d-%s", reservation.getId(), stallId, userEmail);
             Path qrDir = Paths.get(qrDirectory);
@@ -103,12 +111,14 @@ public class ReservationController {
             reservation.setQrCodeFilename(qrFilename);
             resRepo.save(reservation);
 
-            // Send email with QR code
+            // Send confirmation email with QR code (after QR code is generated)
+            // Use absolute path so email-service can access the file
             try {
-                emailService.sendReservationConfirmation(user, stall, reservation, qrPath.toString());
+                String absoluteQrPath = qrPath.toAbsolutePath().toString();
+                emailService.sendReservationConfirmation(user, stall, reservation, absoluteQrPath);
             } catch (Exception e) {
                 // Log error but don't fail the reservation
-                System.err.println("Failed to send email: " + e.getMessage());
+                System.err.println("Failed to send confirmation email: " + e.getMessage());
             }
 
             return ResponseEntity.ok(Map.of(

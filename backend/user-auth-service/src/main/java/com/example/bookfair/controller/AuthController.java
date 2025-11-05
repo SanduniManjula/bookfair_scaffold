@@ -3,6 +3,7 @@ package com.example.bookfair.user.controller;
 import com.example.bookfair.user.model.User;
 import com.example.bookfair.user.repository.UserRepository;
 import com.example.bookfair.user.security.JwtUtil;
+import com.example.bookfair.util.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +24,9 @@ public class AuthController {
     @Autowired
     private JwtUtil jwtUtil;
 
+    @Autowired
+    private EmailService emailService;
+
     // REGISTER
     @PostMapping("/register")
     public Map<String, Object> register(@RequestBody User user) {
@@ -41,6 +45,14 @@ public class AuthController {
         // Encode password
         user.setPassword(encoder.encode(user.getPassword()));
         userRepository.save(user);
+
+        // Send welcome email
+        try {
+            emailService.sendWelcomeEmail(user);
+        } catch (Exception e) {
+            // Log error but don't fail registration
+            System.err.println("Failed to send welcome email: " + e.getMessage());
+        }
 
         return Map.of("message", "Registered successfully");
     }

@@ -5,72 +5,91 @@ import com.example.bookfair.user.model.Stall;
 import com.example.bookfair.user.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
-import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class EmailService {
     
     @Autowired(required = false)
-    private JavaMailSender mailSender;
+    private RestTemplate restTemplate;
 
-    @Value("${spring.mail.username:}")
-    private String fromEmail;
+    @Value("${email.service.url:http://localhost:8083}")
+    private String emailServiceUrl;
+    
+    private RestTemplate getRestTemplate() {
+        if (restTemplate == null) {
+            restTemplate = new RestTemplate();
+        }
+        return restTemplate;
+    }
 
     public void sendReservationConfirmation(User user, Stall stall, Reservation reservation, String qrCodePath) {
-        if (mailSender == null || fromEmail.isEmpty()) {
-            System.out.println("Email service not configured. Would send email to: " + user.getEmail());
-            System.out.println("Subject: Reservation Confirmation - Colombo International Bookfair");
-            System.out.println("Stall: " + stall.getName() + " (" + stall.getSize() + ")");
-            System.out.println("QR Code: " + qrCodePath);
-            return;
-        }
-
         try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            Map<String, Object> request = new HashMap<>();
+            request.put("email", user.getEmail());
+            request.put("username", user.getUsername());
+            request.put("stallName", stall.getName());
+            request.put("stallSize", stall.getSize());
+            request.put("reservationId", reservation.getId());
+            request.put("createdAt", reservation.getCreatedAt().toString());
+            request.put("qrCodePath", qrCodePath);
 
-            helper.setFrom(fromEmail);
-            helper.setTo(user.getEmail());
-            helper.setSubject("Reservation Confirmation - Colombo International Bookfair");
-
-            String htmlContent = buildEmailContent(user, stall, reservation);
-            helper.setText(htmlContent, true);
-
-            // Attach QR code
-            File qrFile = new File(qrCodePath);
-            if (qrFile.exists()) {
-                helper.addAttachment("qr-code.png", qrFile);
-            }
-
-            mailSender.send(message);
-            System.out.println("Confirmation email sent to: " + user.getEmail());
-        } catch (MessagingException e) {
-            System.err.println("Failed to send email: " + e.getMessage());
-            throw new RuntimeException("Failed to send email", e);
+            getRestTemplate().postForObject(
+                    emailServiceUrl + "/api/email/reservation-confirmation",
+                    request,
+                    Map.class
+            );
+            System.out.println("Confirmation email request sent to email service for: " + user.getEmail());
+        } catch (Exception e) {
+            System.err.println("Failed to send confirmation email via email service: " + e.getMessage());
+            // Don't throw exception - reservation should succeed even if email fails
         }
     }
 
-    private String buildEmailContent(User user, Stall stall, Reservation reservation) {
-        return "<html><body style='font-family: Arial, sans-serif;'>" +
-                "<h2>Reservation Confirmed!</h2>" +
-                "<p>Dear " + user.getUsername() + ",</p>" +
-                "<p>Your stall reservation for the Colombo International Bookfair has been confirmed.</p>" +
-                "<h3>Reservation Details:</h3>" +
-                "<ul>" +
-                "<li><strong>Stall Name:</strong> " + stall.getName() + "</li>" +
-                "<li><strong>Stall Size:</strong> " + stall.getSize() + "</li>" +
-                "<li><strong>Reservation ID:</strong> " + reservation.getId() + "</li>" +
-                "<li><strong>Reservation Date:</strong> " + reservation.getCreatedAt() + "</li>" +
-                "</ul>" +
-                "<p>Your unique QR code is attached to this email. Please download and save it as it will be required for entry to the exhibition premises.</p>" +
-                "<p>We look forward to seeing you at the bookfair!</p>" +
-                "<p>Best regards,<br>Colombo International Bookfair Team</p>" +
-                "</body></html>";
+    // Send welcome email on user registration
+    public void sendWelcomeEmail(User user) {
+        try {
+            Map<String, Object> request = new HashMap<>();
+            request.put("email", user.getEmail());
+            request.put("username", user.getUsername());
+
+            getRestTemplate().postForObject(
+                    emailServiceUrl + "/api/email/welcome",
+                    request,
+                    Map.class
+            );
+            System.out.println("Welcome email request sent to email service for: " + user.getEmail());
+        } catch (Exception e) {
+            System.err.println("Failed to send welcome email via email service: " + e.getMessage());
+            // Don't throw exception for welcome email - registration should succeed even if email fails
+        }
     }
+
+    // Send reservation request email (when reservation is created)
+    public void sendReservationRequestEmail(User user, Stall stall, Reservation reservation) {
+        try {
+            Map<String, Object> request = new HashMap<>();
+            request.put("email", user.getEmail());
+            request.put("username", user.getUsername());
+            request.put("stallName", stall.getName());
+            request.put("stallSize", stall.getSize());
+            request.put("reservationId", reservation.getId());
+            request.put("createdAt", reservation.getCreatedAt().toString());
+
+            getRestTemplate().postForObject(
+                    emailServiceUrl + "/api/email/reservation-request",
+                    request,
+                    Map.class
+            );
+            System.out.println("Reservation request email sent to email service for: " + user.getEmail());
+        } catch (Exception e) {
+            System.err.println("Failed to send reservation request email via email service: " + e.getMessage());
+            // Don't throw exception - reservation should succeed even if email fails
+        }
+    }
+
 }

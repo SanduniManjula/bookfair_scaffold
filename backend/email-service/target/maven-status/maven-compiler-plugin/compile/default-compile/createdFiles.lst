@@ -1,0 +1,5 @@
+com/example/bookfair/config/MailConfig.class
+com/example/bookfair/EmailServiceApplication.class
+com/example/bookfair/config/MailConfig$NoOpJavaMailSender.class
+com/example/bookfair/controller/EmailController.class
+com/example/bookfair/service/EmailService.class
