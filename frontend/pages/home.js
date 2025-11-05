@@ -24,9 +24,13 @@ export default function Home() {
     setMessage("");
 
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch("http://localhost:8081/api/user/genres", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({
           email: user.email,
           genres: genres
@@ -49,7 +53,16 @@ export default function Home() {
   return (
     <div style={styles.container}>
       <h1>Welcome, {user.username || user.email}!</h1>
-      <p>You’re now logged into the Colombo Bookfair Portal 🎉</p>
+      <p>You're now logged into the Colombo Bookfair Portal 🎉</p>
+
+      <div style={styles.actions}>
+        <button
+          onClick={() => router.push('/map')}
+          style={styles.primaryButton}
+        >
+          Reserve a Stall
+        </button>
+      </div>
 
       <form onSubmit={handleSaveGenres} style={styles.form}>
         <h3>Add Literary Genres</h3>
@@ -93,5 +106,19 @@ const styles = {
     border: "none",
     borderRadius: "5px",
     cursor: "pointer",
+  },
+  actions: {
+    marginTop: "20px",
+    marginBottom: "30px"
+  },
+  primaryButton: {
+    padding: "15px 30px",
+    backgroundColor: "#4caf50",
+    color: "white",
+    border: "none",
+    borderRadius: "5px",
+    cursor: "pointer",
+    fontSize: "16px",
+    fontWeight: "bold"
   },
 };

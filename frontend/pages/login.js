@@ -33,8 +33,9 @@ export default function Login() {
         throw new Error(data.error || "Login failed. Please check credentials.");
       }
 
-      // Save user to localStorage
+      // Save user and token to localStorage
       localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("token", data.token);
 
       //Success
       alert("Login successful!");

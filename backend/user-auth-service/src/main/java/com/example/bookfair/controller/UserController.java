@@ -1,34 +1,35 @@
-// package com.example.bookfair.user.controller;
+package com.example.bookfair.user.controller;
 
-// import com.example.bookfair.user.model.User;
-// import com.example.bookfair.user.repository.UserRepository;
-// import org.springframework.beans.factory.annotation.Autowired;
-// import org.springframework.web.bind.annotation.*;
-// import java.util.*;
+import com.example.bookfair.user.model.User;
+import com.example.bookfair.user.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 
-// @RestController
-// @RequestMapping("/api/user")
-// @CrossOrigin(origins = "http://localhost:3000")
-// public class UserController {
+import java.util.*;
 
-//     @Autowired
-//     private UserRepository userRepository;
+@RestController
+@RequestMapping("/api/user")
+@CrossOrigin(origins = "http://localhost:3000")
+public class UserController {
 
-//     @PostMapping("/genres")
-//     public Map<String, Object> updateGenres(@RequestBody Map<String, String> request) {
-//         String email = request.get("email");
-//         String genres = request.get("genres");
+    @Autowired
+    private UserRepository userRepository;
 
-//         Optional<User> userOpt = userRepository.findByEmail(email);
-//         if (userOpt.isEmpty()) {
-//             return Map.of("error", "User not found");
-//         }
+    @PostMapping("/genres")
+    public Map<String, Object> updateGenres(@RequestBody Map<String, String> request, Authentication authentication) {
+        String email = authentication.getName();
+        String genres = request.get("genres");
 
-//         User user = userOpt.get();
-//         user.setGenres(genres);
-//         userRepository.save(user);
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isEmpty()) {
+            return Map.of("error", "User not found");
+        }
 
-//         return Map.of("message", "Genres updated");
-//     }
-// }
+        User user = userOpt.get();
+        user.setGenres(genres);
+        userRepository.save(user);
 
+        return Map.of("message", "Genres updated");
+    }
+}

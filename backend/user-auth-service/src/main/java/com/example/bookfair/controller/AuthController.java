@@ -2,6 +2,7 @@ package com.example.bookfair.user.controller;
 
 import com.example.bookfair.user.model.User;
 import com.example.bookfair.user.repository.UserRepository;
+import com.example.bookfair.user.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +19,9 @@ public class AuthController {
 
     @Autowired
     private BCryptPasswordEncoder encoder;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     // REGISTER
     @PostMapping("/register")
@@ -63,9 +67,13 @@ public class AuthController {
 
         User user = userOpt.get();
 
+        // Generate JWT token
+        String token = jwtUtil.generateToken(user.getEmail(), user.getRole(), user.getId());
+
         // Login success
         return Map.of(
                 "message", "Login successful",
+                "token", token,
                 "user", Map.of(
                         "id", user.getId(),
                         "email", user.getEmail(),
