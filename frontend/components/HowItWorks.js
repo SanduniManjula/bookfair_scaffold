@@ -18,63 +18,17 @@ export default function HowItWorks() {
   ];
 
   return (
-    <section id="reserve" style={styles.howItWorks}>
-      <h2 className="section-title" style={styles.sectionTitle}>How It Works</h2>
-      <div className="steps-container" style={styles.stepsContainer}>
+    <section id="reserve" className="py-24 px-8 bg-white text-center">
+      <h2 className="text-4xl font-bold text-gray-900 mb-12">How It Works</h2>
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10">
         {steps.map((step, index) => (
-          <div key={index} className="step-card" style={styles.stepCard}>
-            <div style={styles.stepIcon}>{step.icon}</div>
-            <h3 style={styles.stepTitle}>{step.title}</h3>
-            <p style={styles.stepText}>{step.text}</p>
+          <div key={index} className="step-card p-10 bg-gray-50 rounded-xl text-center transition-all border border-gray-200 cursor-pointer">
+            <div className="text-5xl mb-6">{step.icon}</div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-4">{step.title}</h3>
+            <p className="text-base leading-relaxed text-gray-600">{step.text}</p>
           </div>
         ))}
       </div>
     </section>
   );
 }
-
-const styles = {
-  howItWorks: {
-    padding: "6rem 2rem",
-    backgroundColor: "white",
-    textAlign: "center",
-  },
-  sectionTitle: {
-    fontSize: "2.5rem",
-    fontWeight: "bold",
-    color: "#1a1a1a",
-    marginBottom: "3rem",
-  },
-  stepsContainer: {
-    maxWidth: "1200px",
-    margin: "0 auto",
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-    gap: "2.5rem",
-  },
-  stepCard: {
-    padding: "2.5rem",
-    backgroundColor: "#f9fafb",
-    borderRadius: "12px",
-    textAlign: "center",
-    transition: "transform 0.3s, box-shadow 0.3s",
-    border: "1px solid #e5e7eb",
-    cursor: "pointer",
-  },
-  stepIcon: {
-    fontSize: "3rem",
-    marginBottom: "1.5rem",
-  },
-  stepTitle: {
-    fontSize: "1.5rem",
-    fontWeight: "bold",
-    color: "#1a1a1a",
-    marginBottom: "1rem",
-  },
-  stepText: {
-    fontSize: "1rem",
-    lineHeight: "1.6",
-    color: "#6b7280",
-  },
-};
-

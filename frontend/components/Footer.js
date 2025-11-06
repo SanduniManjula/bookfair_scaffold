@@ -1,21 +1,21 @@
 export default function Footer() {
   return (
-    <footer id="contact" style={styles.footer}>
-      <div style={styles.footerContainer}>
-        <div style={styles.footerLinks}>
-          <a href="#home" style={styles.footerLink}>Home</a>
-          <span style={styles.footerSeparator}>|</span>
-          <a href="#about" style={styles.footerLink}>About</a>
-          <span style={styles.footerSeparator}>|</span>
-          <a href="#contact" style={styles.footerLink}>Contact</a>
-          <span style={styles.footerSeparator}>|</span>
-          <a href="#" style={styles.footerLink}>Terms</a>
+    <footer id="contact" className="bg-gray-900 text-white py-12 px-8">
+      <div className="max-w-7xl mx-auto text-center">
+        <div className="mb-8 flex justify-center items-center gap-4 flex-wrap">
+          <a href="#home" className="text-gray-300 text-sm hover:text-white transition-colors">Home</a>
+          <span className="text-gray-600">|</span>
+          <a href="#about" className="text-gray-300 text-sm hover:text-white transition-colors">About</a>
+          <span className="text-gray-600">|</span>
+          <a href="#contact" className="text-gray-300 text-sm hover:text-white transition-colors">Contact</a>
+          <span className="text-gray-600">|</span>
+          <a href="#" className="text-gray-300 text-sm hover:text-white transition-colors">Terms</a>
         </div>
-        <div style={styles.footerInfo}>
-          <p style={styles.copyright}>
+        <div className="mt-8">
+          <p className="mb-2 text-gray-400 text-sm">
             Copyright © 2025 Colombo Bookfair
           </p>
-          <p style={styles.organizer}>
+          <p className="text-gray-400 text-sm">
             Organizer: Sri Lanka Book Publishers' Association
           </p>
         </div>
@@ -23,46 +23,3 @@ export default function Footer() {
     </footer>
   );
 }
-
-const styles = {
-  footer: {
-    backgroundColor: "#1a1a1a",
-    color: "white",
-    padding: "3rem 2rem",
-  },
-  footerContainer: {
-    maxWidth: "1200px",
-    margin: "0 auto",
-    textAlign: "center",
-  },
-  footerLinks: {
-    marginBottom: "2rem",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: "1rem",
-    flexWrap: "wrap",
-  },
-  footerLink: {
-    color: "#e5e7eb",
-    textDecoration: "none",
-    fontSize: "0.95rem",
-    transition: "color 0.3s",
-  },
-  footerSeparator: {
-    color: "#6b7280",
-  },
-  footerInfo: {
-    marginTop: "2rem",
-  },
-  copyright: {
-    marginBottom: "0.5rem",
-    color: "#9ca3af",
-    fontSize: "0.9rem",
-  },
-  organizer: {
-    color: "#9ca3af",
-    fontSize: "0.9rem",
-  },
-};
-
