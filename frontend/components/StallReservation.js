@@ -24,7 +24,6 @@ export default function StallReservation() {
 
   // Filters
   const [sizeFilter, setSizeFilter] = useState('All');
-  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
@@ -151,6 +150,12 @@ export default function StallReservation() {
 
   const handleStallClick = (stall) => {
     console.log('handleStallClick called with stall:', stall);
+    console.log('Stall properties:', {
+      id: stall?.id,
+      name: stall?.name,
+      size: stall?.size,
+      reserved: stall?.reserved
+    });
     
     if (!stall) {
       console.warn('No stall provided to handleStallClick');
@@ -159,25 +164,48 @@ export default function StallReservation() {
       return;
     }
     
-    // Check if this is a virtual stall (not in database) - but allow if it has an ID
-    const isVirtual = stall.virtual === true;
-    const existsInDatabase = stalls.some(s => s.id === stall.id);
-    
-    if (isVirtual && !existsInDatabase) {
-      console.warn('Virtual stall clicked:', stall);
-      setMessage(`This stall is not available in the database. Please select a stall that exists.`);
+    // Ensure stall has required properties
+    if (!stall.id) {
+      console.error('Stall missing ID:', stall);
+      setMessage('Unable to select this stall. Stall ID is missing.');
       setTimeout(() => setMessage(''), 3000);
       return;
     }
     
-    // If stall doesn't exist in database but has an ID, try to find it
-    if (!existsInDatabase && stall.id) {
-      const foundStall = stalls.find(s => s.id === stall.id || s.name === stall.name);
+    // Check if stall exists in database by ID
+    const existsInDatabase = stalls.some(s => s.id === stall.id);
+    
+    if (!existsInDatabase) {
+      console.warn('Stall not found in database by ID:', {
+        clickedStall: { id: stall.id, name: stall.name },
+        availableStalls: stalls.slice(0, 5).map(s => ({ id: s.id, name: s.name }))
+      });
+      
+      // Try to find by name as fallback
+      const foundStall = stalls.find(s => {
+        if (stall.name && s.name) {
+          // Normalize names for comparison (A08 vs A8)
+          const normalize = (name) => {
+            const match = String(name).match(/^([A-Za-z]+)(\d+)$/);
+            if (match) {
+              return `${match[1]}${parseInt(match[2], 10)}`;
+            }
+            return String(name);
+          };
+          return normalize(s.name) === normalize(stall.name);
+        }
+        return false;
+      });
+      
       if (foundStall) {
+        console.log('Found stall by name match:', foundStall);
         stall = foundStall;
       } else {
-        console.warn('Stall not found in database:', stall);
-        setMessage(`This stall is not available in the database.`);
+        console.error('Stall not found in database:', {
+          clicked: { id: stall.id, name: stall.name },
+          totalStalls: stalls.length
+        });
+        setMessage(`This stall (${stall.name || stall.id}) is not available in the database.`);
         setTimeout(() => setMessage(''), 3000);
         return;
       }
@@ -265,27 +293,17 @@ export default function StallReservation() {
 
   const remainingSlots = 3 - userReservations;
   
-  // Filter stalls based on search query and size filter
+  // Filter stalls based on size filter
   const filteredStalls = stalls.filter(stall => {
     // Size filter
     if (sizeFilter !== 'All' && stall.size !== sizeFilter) {
       return false;
     }
     
-    // Search filter - search by name or ID
-    if (searchQuery.trim()) {
-      const query = searchQuery.trim().toLowerCase();
-      const stallName = (stall.name || '').toLowerCase();
-      const stallId = (stall.id || '').toString().toLowerCase();
-      if (!stallName.includes(query) && !stallId.includes(query)) {
-        return false;
-      }
-    }
-    
     return true;
   });
 
-  // Filter map layout halls to only show stalls that match the filters
+  // Filter map layout halls to only show stalls that match the size filter
   const filteredMapLayout = mapLayout && mapLayout.halls ? {
     ...mapLayout,
     halls: mapLayout.halls.map(hall => ({
@@ -301,34 +319,18 @@ export default function StallReservation() {
                  sName.replace(/^0+/, '') === mapName.replace(/^0+/, '');
         });
         
-        // If no matching stall found, check if it matches search query
+        // If no matching stall found, check size from map layout
         if (!matchingStall) {
-          if (searchQuery.trim()) {
-            const query = searchQuery.trim().toLowerCase();
-            const mapStallId = (stallId || '').toString().toLowerCase();
-            if (!mapStallId.includes(query)) {
-              return false;
-            }
-          }
-          // If no size filter or size matches, show it
+          // If size filter is set, check if map layout stall size matches
           if (sizeFilter !== 'All' && stallData.size !== sizeFilter) {
             return false;
           }
           return true;
         }
         
-        // Check if matching stall passes filters
+        // Check if matching stall passes size filter
         if (sizeFilter !== 'All' && matchingStall.size !== sizeFilter) {
           return false;
-        }
-        
-        if (searchQuery.trim()) {
-          const query = searchQuery.trim().toLowerCase();
-          const stallName = (matchingStall.name || '').toLowerCase();
-          const stallId = (matchingStall.id || '').toString().toLowerCase();
-          if (!stallName.includes(query) && !stallId.includes(query)) {
-            return false;
-          }
         }
         
         return true;
@@ -358,32 +360,6 @@ export default function StallReservation() {
 
           {/* Filters */}
           <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Search by Stall ID or Name
-                {searchQuery && (
-                  <span className="ml-2 text-xs text-blue-600">({filteredStalls.length} matches)</span>
-                )}
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search stalls..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    title="Clear search"
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-            </div>
             <div className="w-full md:w-48">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Stall Size
@@ -402,16 +378,13 @@ export default function StallReservation() {
                 <option value="LARGE">Large</option>
               </select>
             </div>
-            {(searchQuery || sizeFilter !== 'All') && (
+            {sizeFilter !== 'All' && (
               <div className="flex items-end">
                 <button
-                  onClick={() => {
-                    setSearchQuery('');
-                    setSizeFilter('All');
-                  }}
+                  onClick={() => setSizeFilter('All')}
                   className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
                 >
-                  Clear Filters
+                  Clear Filter
                 </button>
               </div>
             )}
@@ -491,7 +464,7 @@ export default function StallReservation() {
               {/* Map Display - Use saved map if available, otherwise fallback to SVG */}
               {useSavedMap && (filteredMapLayout || mapLayout) ? (
                 <div className="w-full border-2 border-gray-200 rounded-lg bg-white relative" style={{ minHeight: '600px', overflow: 'hidden' }}>
-                  {(searchQuery || sizeFilter !== 'All') && (
+                  {sizeFilter !== 'All' && (
                     <div className="absolute top-2 left-2 z-20 bg-blue-100 text-blue-800 px-3 py-1 rounded-lg text-sm font-medium">
                       Showing {filteredMapLayout ? filteredMapLayout.halls.reduce((sum, h) => sum + (h.stalls?.length || 0), 0) : 0} filtered stalls
                     </div>

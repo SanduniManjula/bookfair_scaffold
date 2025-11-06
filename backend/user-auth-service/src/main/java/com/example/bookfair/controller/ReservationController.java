@@ -51,7 +51,7 @@ public class ReservationController {
 
     @GetMapping("/all")
     public List<Stall> allStalls() {
-        // Return stalls sorted by ID to maintain polygon order (stalls are created in polygon index order)
+        // Return all stalls sorted by ID
         return stallRepo.findAll().stream()
             .sorted((a, b) -> Long.compare(a.getId(), b.getId()))
             .collect(Collectors.toList());
