@@ -87,19 +87,19 @@ export default function StallReservation() {
       
       if (!res.ok) {
         setMessage(`Failed to load stalls (HTTP ${res.status})`);
-        setDebugInfo(`HTTP ${res.status}: ${res.statusText}`);
+        setDebugInfo(''); // Only show debug info for actual errors
         return;
       }
       
       const data = await res.json();
       console.log('Loaded stalls:', data.length, data);
       setStalls(data);
-      setDebugInfo(`Loaded ${data.length} stalls`);
+      setDebugInfo(''); // Clear debug info on successful load
       setMessage('');
     } catch (err) {
       console.error('Failed to load stalls:', err);
       setMessage('Failed to load stalls. Please check if the backend is running.');
-      setDebugInfo(`Error: ${err.message}`);
+      setDebugInfo(''); // Hide debug info, show user-friendly message instead
     }
   };
 
@@ -384,7 +384,7 @@ export default function StallReservation() {
 
               {/* Map Display - Use saved map if available, otherwise fallback to SVG */}
               {useSavedMap && mapLayout ? (
-                <div className="w-full overflow-auto border-2 border-gray-200 rounded-lg bg-white" style={{ minHeight: '600px' }}>
+                <div className="w-full border-2 border-gray-200 rounded-lg bg-white relative" style={{ minHeight: '600px', overflow: 'hidden' }}>
                   <MapViewCanvas
                     halls={mapLayout.halls || []}
                     stalls={stalls}

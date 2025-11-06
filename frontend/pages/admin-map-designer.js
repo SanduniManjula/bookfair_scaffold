@@ -14,6 +14,7 @@ export default function AdminMapDesigner() {
   const [user, setUser] = useState(null);
   const [halls, setHalls] = useState([]);
   const [selectedStall, setSelectedStall] = useState(null);
+  const [selectedHall, setSelectedHall] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [mode, setMode] = useState('select'); // select, draw, grid
   const [mapData, setMapData] = useState(null);
@@ -59,8 +60,15 @@ export default function AdminMapDesigner() {
       if (res.ok) {
         const data = await res.json();
         setMapData(data);
-        if (data.halls) {
-          setHalls(data.halls);
+        if (data.halls && data.halls.length > 0) {
+          // Ensure all halls have label positions
+          const hallsWithLabels = data.halls.map((hall, index) => ({
+            ...hall,
+            labelX: hall.labelX || 20 + (index * 200),
+            labelY: hall.labelY || 20 + (index * 30)
+          }));
+          setHalls(hallsWithLabels);
+          setSelectedHall(hallsWithLabels[0]); // Select first hall by default
         }
       }
     } catch (err) {
@@ -142,9 +150,12 @@ export default function AdminMapDesigner() {
       const newHall = {
         id: `hall-${Date.now()}`,
         name: hallName.trim(),
-        stalls: []
+        stalls: [],
+        labelX: 20 + (halls.length * 200), // Offset labels to prevent overlap
+        labelY: 20 + (halls.length * 30)
       };
       setHalls([...halls, newHall]);
+      setSelectedHall(newHall); // Select the newly created hall
     }
   };
 
@@ -276,6 +287,8 @@ export default function AdminMapDesigner() {
               setHalls={setHalls}
               mode={mode}
               setMode={setMode}
+              selectedHall={selectedHall}
+              setSelectedHall={setSelectedHall}
             />
           </div>
 
@@ -287,6 +300,7 @@ export default function AdminMapDesigner() {
                 setHalls={setHalls}
                 mode={mode}
                 onStallClick={handleStallClick}
+                selectedHall={selectedHall}
               />
             </div>
           </div>

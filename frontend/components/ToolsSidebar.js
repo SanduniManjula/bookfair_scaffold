@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export default function ToolsSidebar({ halls, setHalls, mode, setMode }) {
+export default function ToolsSidebar({ halls, setHalls, mode, setMode, selectedHall, setSelectedHall }) {
   const [hallName, setHallName] = useState('');
   const [stallPrefix, setStallPrefix] = useState('A');
   const [rows, setRows] = useState(3);
@@ -67,13 +67,31 @@ export default function ToolsSidebar({ halls, setHalls, mode, setMode }) {
     setCols(8);
   };
 
-  const handleDeleteStall = () => {
-    setMode('delete');
-  };
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-4">
       <h3 className="text-lg font-semibold mb-4">Tools</h3>
+
+      {/* Hall Selection */}
+      {halls.length > 0 && (
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">Active Hall</label>
+          <select
+            value={selectedHall?.id || ''}
+            onChange={(e) => {
+              const hall = halls.find(h => h.id === e.target.value);
+              setSelectedHall(hall || null);
+            }}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white"
+          >
+            {halls.map(hall => (
+              <option key={hall.id} value={hall.id}>
+                {hall.name} ({hall.stalls.length} stalls)
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Mode Selection */}
       <div className="mb-6">
@@ -81,15 +99,33 @@ export default function ToolsSidebar({ halls, setHalls, mode, setMode }) {
         <div className="space-y-2">
           <button
             onClick={() => setMode('select')}
-            className={`w-full px-3 py-2 rounded ${mode === 'select' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+            className={`w-full px-3 py-2 rounded transition-colors ${
+              mode === 'select' 
+                ? 'bg-blue-600 text-white shadow-md' 
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
           >
-            Select
+            ✋ Select
           </button>
           <button
             onClick={() => setMode('draw')}
-            className={`w-full px-3 py-2 rounded ${mode === 'draw' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+            className={`w-full px-3 py-2 rounded transition-colors ${
+              mode === 'draw' 
+                ? 'bg-blue-600 text-white shadow-md' 
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
           >
-            Draw Mode
+            ✏️ Draw Mode
+          </button>
+          <button
+            onClick={() => setMode('delete')}
+            className={`w-full px-3 py-2 rounded transition-colors ${
+              mode === 'delete' 
+                ? 'bg-red-600 text-white shadow-md' 
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            🗑️ Delete Mode
           </button>
         </div>
       </div>
@@ -205,13 +241,6 @@ export default function ToolsSidebar({ halls, setHalls, mode, setMode }) {
         </div>
       </div>
 
-      {/* Delete Mode */}
-      <button
-        onClick={handleDeleteStall}
-        className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-      >
-        🗑 Delete Stall
-      </button>
     </div>
   );
 }
