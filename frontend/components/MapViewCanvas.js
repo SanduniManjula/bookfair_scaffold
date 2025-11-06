@@ -55,8 +55,16 @@ export default function MapViewCanvas({ halls, stalls, selectedStalls, onStallCl
   // Create a map of stall names to stall objects for quick lookup
   const stallMap = new Map();
   stalls.forEach(stall => {
-    if (stall.name) stallMap.set(stall.name, stall);
-    if (stall.id) stallMap.set(stall.id, stall);
+    if (stall.name) {
+      stallMap.set(stall.name, stall);
+      stallMap.set(stall.name.toUpperCase(), stall);
+      stallMap.set(stall.name.trim(), stall);
+    }
+    if (stall.id) {
+      stallMap.set(stall.id, stall);
+      stallMap.set(String(stall.id), stall);
+      stallMap.set(parseInt(stall.id), stall);
+    }
   });
   
   // Debug: Log stall matching info
@@ -65,6 +73,7 @@ export default function MapViewCanvas({ halls, stalls, selectedStalls, onStallCl
     console.log('MapViewCanvas - Total stalls in database:', stalls.length);
     console.log('MapViewCanvas - Sample stall from map:', halls[0].stalls[0]);
     console.log('MapViewCanvas - Sample stall from DB:', stalls[0]);
+    console.log('MapViewCanvas - Stall map keys:', Array.from(stallMap.keys()).slice(0, 10));
   }
 
   return (
@@ -80,7 +89,8 @@ export default function MapViewCanvas({ halls, stalls, selectedStalls, onStallCl
           style={{ cursor: 'pointer' }}
           onClick={(e) => {
             // Only handle clicks on the stage itself (not on stalls)
-            if (e.target === e.target.getStage()) {
+            const stage = e.target.getStage();
+            if (e.target === stage) {
               console.log('Stage clicked (empty area)');
             }
           }}
@@ -100,53 +110,79 @@ export default function MapViewCanvas({ halls, stalls, selectedStalls, onStallCl
                 />
 
                 {/* Render stalls for this hall */}
-                {hall.stalls.map(stallData => {
+                {hall.stalls.map((stallData, index) => {
                   // Find the corresponding stall from the database by name (e.g., "A01", "B87")
                   const stallId = stallData.stallId || stallData.id || stallData.name;
                   let stall = stallMap.get(stallId);
                   
-                  // If not found by exact match, try to find by name
+                  // If not found by exact match, try multiple matching strategies
                   if (!stall) {
                     stall = stalls.find(s => {
-                      // Try matching by name (string comparison)
+                      // Try matching by name (string comparison, case-insensitive)
                       if (s.name && typeof s.name === 'string' && stallId && typeof stallId === 'string') {
-                        return s.name.trim() === stallId.trim();
+                        const sName = s.name.trim().toUpperCase();
+                        const mapName = stallId.trim().toUpperCase();
+                        if (sName === mapName) return true;
+                        // Try partial match (e.g., "A1" matches "A01")
+                        if (sName.replace(/^0+/, '') === mapName.replace(/^0+/, '')) return true;
                       }
-                      // Try matching by ID
-                      return s.id === stallId || s.id === parseInt(stallId);
+                      // Try matching by ID (numeric or string)
+                      if (s.id && stallId) {
+                        if (s.id === stallId || s.id === parseInt(stallId) || String(s.id) === String(stallId)) {
+                          return true;
+                        }
+                      }
+                      // Try matching by index if available
+                      if (index < stalls.length && s.id === stalls[index].id) {
+                        return true;
+                      }
+                      return false;
                     });
                   }
                   
                   // If stall not found in database, still render it but with default values
                   if (!stall) {
-                    console.warn('Stall not found in database:', stallId, 'Available stalls:', stalls.slice(0, 5).map(s => ({ id: s.id, name: s.name })));
-                    return (
-                      <Group
-                        key={stallData.id || `stall-${stallId}`}
-                        x={stallData.x}
-                        y={stallData.y}
-                        onClick={() => {
-                          console.warn('Stall not found in database:', stallId);
-                        }}
-                      >
-                        <Rect
-                          width={stallData.width || 80}
-                          height={stallData.height || 60}
-                          fill="rgba(224, 224, 224, 0.4)"
-                          stroke="#999"
-                          strokeWidth={1}
-                          opacity={0.5}
-                        />
-                        <Text
-                          x={5}
-                          y={(stallData.height || 60) / 2 - 5}
-                          text={stallId || 'N/A'}
-                          fontSize={12}
-                          fill="#666"
-                          fontStyle="bold"
-                        />
-                      </Group>
-                    );
+                    console.warn('Stall not found in database:', stallId, 'Map stall index:', index, 'Available stalls:', stalls.slice(0, 5).map(s => ({ id: s.id, name: s.name })));
+                    // Try to use stall by index as fallback
+                    const fallbackStall = stalls[index];
+                    if (fallbackStall) {
+                      stall = fallbackStall;
+                      console.log('Using fallback stall by index:', fallbackStall);
+                    } else {
+                      return (
+                        <Group
+                          key={stallData.id || `stall-${stallId}-${index}`}
+                          x={stallData.x}
+                          y={stallData.y}
+                          onClick={() => {
+                            console.warn('Stall not found in database:', stallId);
+                            if (onStallClick) {
+                              onStallClick(null);
+                            }
+                          }}
+                          listening={true}
+                        >
+                          <Rect
+                            width={stallData.width || 80}
+                            height={stallData.height || 60}
+                            fill="rgba(224, 224, 224, 0.4)"
+                            stroke="#999"
+                            strokeWidth={1}
+                            opacity={0.5}
+                            listening={true}
+                          />
+                          <Text
+                            x={5}
+                            y={(stallData.height || 60) / 2 - 5}
+                            text={stallId || 'N/A'}
+                            fontSize={12}
+                            fill="#666"
+                            fontStyle="bold"
+                            listening={false}
+                          />
+                        </Group>
+                      );
+                    }
                   }
 
                   const isSelected = selectedStalls.some(s => s.id === stall.id);
@@ -155,9 +191,21 @@ export default function MapViewCanvas({ halls, stalls, selectedStalls, onStallCl
 
                   const handleClick = (e) => {
                     e.cancelBubble = true;
-                    console.log('Stall clicked:', stall);
+                    if (e.evt) {
+                      e.evt.stopPropagation();
+                      e.evt.preventDefault();
+                    }
+                    console.log('Stall clicked in MapViewCanvas:', {
+                      stall: stall,
+                      stallId: stall.id,
+                      stallName: stall.name,
+                      isSelected: isSelected,
+                      isReserved: isReserved
+                    });
                     if (onStallClick) {
                       onStallClick(stall);
+                    } else {
+                      console.warn('onStallClick handler is not provided');
                     }
                   };
 
@@ -175,7 +223,7 @@ export default function MapViewCanvas({ halls, stalls, selectedStalls, onStallCl
 
                   return (
                     <Group
-                      key={stallData.id || stall.id}
+                      key={stallData.id || stall.id || `stall-${index}`}
                       x={stallData.x}
                       y={stallData.y}
                       onClick={handleClick}
@@ -202,7 +250,7 @@ export default function MapViewCanvas({ halls, stalls, selectedStalls, onStallCl
                       <Text
                         x={5}
                         y={(stallData.height || 60) / 2 - 10}
-                        text={stall.name || stallData.stallId}
+                        text={stall.name || stallData.stallId || `Stall ${index + 1}`}
                         fontSize={12}
                         fill="#000"
                         fontStyle="bold"
@@ -211,7 +259,7 @@ export default function MapViewCanvas({ halls, stalls, selectedStalls, onStallCl
                       <Text
                         x={5}
                         y={(stallData.height || 60) / 2 + 5}
-                        text={stall.size || stallData.size}
+                        text={stall.size || stallData.size || 'MEDIUM'}
                         fontSize={10}
                         fill="#666"
                         listening={false}

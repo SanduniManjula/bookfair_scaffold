@@ -154,17 +154,33 @@ export default function StallReservation() {
     
     if (!stall) {
       console.warn('No stall provided to handleStallClick');
+      setMessage('Unable to select this stall. Please try again.');
+      setTimeout(() => setMessage(''), 3000);
       return;
     }
     
-    // Check if this is a virtual stall (not in database)
-    const isVirtual = stall.virtual || !stalls.some(s => s.id === stall.id);
+    // Check if this is a virtual stall (not in database) - but allow if it has an ID
+    const isVirtual = stall.virtual === true;
+    const existsInDatabase = stalls.some(s => s.id === stall.id);
     
-    if (isVirtual) {
+    if (isVirtual && !existsInDatabase) {
       console.warn('Virtual stall clicked:', stall);
-      setMessage(`This stall is not available in the database. Please select a stall that exists (A-Z).`);
+      setMessage(`This stall is not available in the database. Please select a stall that exists.`);
       setTimeout(() => setMessage(''), 3000);
       return;
+    }
+    
+    // If stall doesn't exist in database but has an ID, try to find it
+    if (!existsInDatabase && stall.id) {
+      const foundStall = stalls.find(s => s.id === stall.id || s.name === stall.name);
+      if (foundStall) {
+        stall = foundStall;
+      } else {
+        console.warn('Stall not found in database:', stall);
+        setMessage(`This stall is not available in the database.`);
+        setTimeout(() => setMessage(''), 3000);
+        return;
+      }
     }
     
     if (stall.reserved) {
@@ -177,6 +193,7 @@ export default function StallReservation() {
     
     if (isSelected) {
       setSelectedStalls(selectedStalls.filter(s => s.id !== stall.id));
+      console.log('Stall deselected:', stall.name || stall.id);
     } else {
       const totalSelected = selectedStalls.length + userReservations;
       if (totalSelected >= 3) {
@@ -186,6 +203,7 @@ export default function StallReservation() {
       }
       
       setSelectedStalls([...selectedStalls, stall]);
+      console.log('Stall selected:', stall.name || stall.id, 'Total selected:', selectedStalls.length + 1);
     }
   };
 
