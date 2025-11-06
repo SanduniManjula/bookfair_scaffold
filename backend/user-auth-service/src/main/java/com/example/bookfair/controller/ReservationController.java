@@ -35,6 +35,12 @@ public class ReservationController {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private MapLayoutRepository mapLayoutRepository;
+
+    @Autowired
+    private com.fasterxml.jackson.databind.ObjectMapper objectMapper;
+
     @Value("${qr.code.directory:./qr-codes}")
     private String qrDirectory;
 
@@ -157,5 +163,26 @@ public class ReservationController {
             result.add(res);
         }
         return result;
+    }
+
+    // Get map layout (public endpoint for viewing the map)
+    @GetMapping("/map-layout")
+    public ResponseEntity<?> getMapLayout() {
+        try {
+            Optional<MapLayout> layoutOpt = mapLayoutRepository.findTopByOrderByIdDesc();
+            if (layoutOpt.isEmpty()) {
+                return ResponseEntity.ok(Map.of("halls", new ArrayList<>()));
+            }
+
+            MapLayout layout = layoutOpt.get();
+            Map<String, Object> layoutData = objectMapper.readValue(
+                layout.getLayoutData(),
+                Map.class
+            );
+            return ResponseEntity.ok(layoutData);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to parse map layout: " + e.getMessage()));
+        }
     }
 }

@@ -73,6 +73,15 @@ export default function AdminMapDesigner() {
     setMessage('');
 
     try {
+      // Validate that there's at least one hall with stalls
+      const hasStalls = halls.some(hall => hall.stalls && hall.stalls.length > 0);
+      if (!hasStalls) {
+        setMessage('Please add at least one stall to the map before saving.');
+        setTimeout(() => setMessage(''), 3000);
+        setIsSaving(false);
+        return;
+      }
+
       const token = localStorage.getItem('token');
       const res = await fetch('http://localhost:8081/api/admin/map-layout', {
         method: 'POST',
@@ -85,17 +94,22 @@ export default function AdminMapDesigner() {
         })
       });
 
+      const data = await res.json();
+      
       if (res.ok) {
-        setMessage('Map saved successfully!');
-        setTimeout(() => setMessage(''), 3000);
+        setMessage('Map saved successfully! The map will be available on the map page.');
+        setTimeout(() => setMessage(''), 5000);
+        console.log('Map saved successfully:', data);
       } else {
-        setMessage('Failed to save map');
-        setTimeout(() => setMessage(''), 3000);
+        const errorMsg = data.error || 'Failed to save map';
+        setMessage(`Error: ${errorMsg}`);
+        setTimeout(() => setMessage(''), 5000);
+        console.error('Failed to save map:', data);
       }
     } catch (err) {
       console.error('Failed to save map:', err);
-      setMessage('Error saving map');
-      setTimeout(() => setMessage(''), 3000);
+      setMessage(`Error saving map: ${err.message}`);
+      setTimeout(() => setMessage(''), 5000);
     } finally {
       setIsSaving(false);
     }
