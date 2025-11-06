@@ -178,6 +178,9 @@ export default function AdminPanel() {
           <button onClick={() => router.push('/admin-map-designer')} style={{...styles.backButton, marginRight: '10px', backgroundColor: '#4F46E5'}}>
             Map Designer
           </button>
+          <button onClick={() => router.push('/admin-reservations')} style={{...styles.backButton, marginRight: '10px', backgroundColor: '#059669'}}>
+            Reservations
+          </button>
           <button onClick={() => router.push('/home')} style={styles.backButton}>
             Back to Home
           </button>
