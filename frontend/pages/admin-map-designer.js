@@ -14,6 +14,7 @@ export default function AdminMapDesigner() {
   const [user, setUser] = useState(null);
   const [halls, setHalls] = useState([]);
   const [selectedStall, setSelectedStall] = useState(null);
+  const [selectedHall, setSelectedHall] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [mode, setMode] = useState('select'); // select, draw, grid
   const [mapData, setMapData] = useState(null);
@@ -59,8 +60,15 @@ export default function AdminMapDesigner() {
       if (res.ok) {
         const data = await res.json();
         setMapData(data);
-        if (data.halls) {
-          setHalls(data.halls);
+        if (data.halls && data.halls.length > 0) {
+          // Ensure all halls have label positions
+          const hallsWithLabels = data.halls.map((hall, index) => ({
+            ...hall,
+            labelX: hall.labelX || 20 + (index * 200),
+            labelY: hall.labelY || 20 + (index * 30)
+          }));
+          setHalls(hallsWithLabels);
+          setSelectedHall(hallsWithLabels[0]); // Select first hall by default
         }
       }
     } catch (err) {
@@ -73,6 +81,15 @@ export default function AdminMapDesigner() {
     setMessage('');
 
     try {
+      // Validate that there's at least one hall with stalls
+      const hasStalls = halls.some(hall => hall.stalls && hall.stalls.length > 0);
+      if (!hasStalls) {
+        setMessage('Please add at least one stall to the map before saving.');
+        setTimeout(() => setMessage(''), 3000);
+        setIsSaving(false);
+        return;
+      }
+
       const token = localStorage.getItem('token');
       const res = await fetch('http://localhost:8081/api/admin/map-layout', {
         method: 'POST',
@@ -85,17 +102,22 @@ export default function AdminMapDesigner() {
         })
       });
 
+      const data = await res.json();
+      
       if (res.ok) {
-        setMessage('Map saved successfully!');
-        setTimeout(() => setMessage(''), 3000);
+        setMessage('Map saved successfully! The map will be available on the map page.');
+        setTimeout(() => setMessage(''), 5000);
+        console.log('Map saved successfully:', data);
       } else {
-        setMessage('Failed to save map');
-        setTimeout(() => setMessage(''), 3000);
+        const errorMsg = data.error || 'Failed to save map';
+        setMessage(`Error: ${errorMsg}`);
+        setTimeout(() => setMessage(''), 5000);
+        console.error('Failed to save map:', data);
       }
     } catch (err) {
       console.error('Failed to save map:', err);
-      setMessage('Error saving map');
-      setTimeout(() => setMessage(''), 3000);
+      setMessage(`Error saving map: ${err.message}`);
+      setTimeout(() => setMessage(''), 5000);
     } finally {
       setIsSaving(false);
     }
@@ -128,9 +150,12 @@ export default function AdminMapDesigner() {
       const newHall = {
         id: `hall-${Date.now()}`,
         name: hallName.trim(),
-        stalls: []
+        stalls: [],
+        labelX: 20 + (halls.length * 200), // Offset labels to prevent overlap
+        labelY: 20 + (halls.length * 30)
       };
       setHalls([...halls, newHall]);
+      setSelectedHall(newHall); // Select the newly created hall
     }
   };
 
@@ -262,6 +287,8 @@ export default function AdminMapDesigner() {
               setHalls={setHalls}
               mode={mode}
               setMode={setMode}
+              selectedHall={selectedHall}
+              setSelectedHall={setSelectedHall}
             />
           </div>
 
@@ -273,6 +300,7 @@ export default function AdminMapDesigner() {
                 setHalls={setHalls}
                 mode={mode}
                 onStallClick={handleStallClick}
+                selectedHall={selectedHall}
               />
             </div>
           </div>

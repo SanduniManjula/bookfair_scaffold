@@ -31,6 +31,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/reservations/available").permitAll()
                         .requestMatchers("/api/reservations/all").permitAll()
+                        .requestMatchers("/api/reservations/map-layout").permitAll()
                         .requestMatchers("/api/reservations/my-reservations").authenticated()
                         .requestMatchers("/api/reservations/reserve").authenticated()
                         .requestMatchers("/api/admin/**").authenticated()
