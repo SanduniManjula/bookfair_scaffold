@@ -13,6 +13,7 @@ export default function StallReservation() {
   const [hoveredStallId, setHoveredStallId] = useState(null);
   const svgRef = useRef(null);
   const polygonStallMapRef = useRef(new Map());
+  const [debugInfo, setDebugInfo] = useState('');
 
   // Filters
   const [sizeFilter, setSizeFilter] = useState('All');
@@ -33,11 +34,19 @@ export default function StallReservation() {
   }, [router]);
 
   useEffect(() => {
-    if (stalls.length > 0 && svgRef.current) {
+    if (svgRef.current) {
+      // Wait a bit longer to ensure SVG is fully rendered
       const timer = setTimeout(() => {
-        initializePolygonMapping();
-        updatePolygonStyles();
-      }, 100);
+        const polygons = svgRef.current?.querySelectorAll('polygon');
+        if (polygons && polygons.length > 0) {
+          console.log('Initializing polygon mapping...');
+          initializePolygonMapping();
+          updatePolygonStyles();
+        } else {
+          console.warn('No polygons found in SVG');
+          setDebugInfo('No polygons found in SVG');
+        }
+      }, 300);
       return () => clearTimeout(timer);
     }
   }, [stalls]);
@@ -82,63 +91,101 @@ export default function StallReservation() {
       
       if (!res.ok) {
         setMessage(`Failed to load stalls (HTTP ${res.status})`);
+        setDebugInfo(`HTTP ${res.status}: ${res.statusText}`);
         return;
       }
       
       const data = await res.json();
+      console.log('Loaded stalls:', data.length, data);
       setStalls(data);
+      setDebugInfo(`Loaded ${data.length} stalls`);
       setMessage('');
     } catch (err) {
       console.error('Failed to load stalls:', err);
       setMessage('Failed to load stalls. Please check if the backend is running.');
+      setDebugInfo(`Error: ${err.message}`);
     }
   };
 
   const initializePolygonMapping = () => {
-    if (!svgRef.current || stalls.length === 0) return;
+    if (!svgRef.current) {
+      console.log('Cannot initialize mapping: SVG not available');
+      return;
+    }
     
     const polygons = svgRef.current.querySelectorAll('polygon');
+    console.log(`Found ${polygons.length} polygons, ${stalls.length} stalls`);
     
-    // Set default styles for all polygons
-    polygons.forEach((polygon) => {
+    // Create a map of stall IDs by position for quick lookup
+    const stallMap = new Map();
+    stalls.forEach((stall, index) => {
+      stallMap.set(index, stall);
+    });
+    
+    // Set up ALL polygons to be interactive
+    polygons.forEach((polygon, index) => {
+      // Remove existing event listeners if any
       if (polygon._clickHandler) {
         polygon.removeEventListener('click', polygon._clickHandler);
         polygon.removeEventListener('mouseenter', polygon._mouseEnterHandler);
         polygon.removeEventListener('mouseleave', polygon._mouseLeaveHandler);
       }
       
-      polygon.style.fill = 'transparent';
-      polygon.style.stroke = 'none';
-      polygon.style.pointerEvents = 'none';
-      polygon.style.opacity = '0';
+      // Get the stall for this polygon (if available)
+      const stall = stallMap.get(index);
+      
+      if (stall) {
+        // Map stall to polygon
+        polygonStallMapRef.current.set(polygon, stall);
+        polygon.setAttribute('data-stall-id', stall.id);
+        polygon.setAttribute('data-stall-name', stall.name || '');
+      } else {
+        // Fallback: Create a virtual stall for unmapped polygons (shouldn't happen if DB is complete)
+        const virtualStall = {
+          id: `virtual-${index}`,
+          name: `Stall ${index + 1}`,
+          size: 'MEDIUM',
+          reserved: false,
+          virtual: true
+        };
+        polygonStallMapRef.current.set(polygon, virtualStall);
+        polygon.setAttribute('data-stall-id', virtualStall.id);
+        polygon.setAttribute('data-stall-name', virtualStall.name);
+      }
+      
+      // Enable all polygons to be interactive
+      polygon.style.pointerEvents = 'auto';
+      polygon.style.cursor = 'pointer';
+      polygon.style.opacity = '1';
+      
+      const mappedStall = polygonStallMapRef.current.get(polygon);
+      
+      const clickHandler = (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        console.log('Polygon clicked:', mappedStall);
+        handlePolygonClick(mappedStall);
+      };
+      const mouseEnterHandler = () => {
+        if (mappedStall && mappedStall.id) {
+          setHoveredStallId(mappedStall.id);
+        }
+      };
+      const mouseLeaveHandler = () => {
+        setHoveredStallId(null);
+      };
+      
+      polygon._clickHandler = clickHandler;
+      polygon._mouseEnterHandler = mouseEnterHandler;
+      polygon._mouseLeaveHandler = mouseLeaveHandler;
+      
+      polygon.addEventListener('click', clickHandler);
+      polygon.addEventListener('mouseenter', mouseEnterHandler);
+      polygon.addEventListener('mouseleave', mouseLeaveHandler);
     });
     
-    // Map ALL stalls to polygons (up to the number of available polygons)
-    const maxStalls = Math.min(stalls.length, polygons.length);
-    stalls.slice(0, maxStalls).forEach((stall, index) => {
-      if (index < polygons.length) {
-        const polygon = polygons[index];
-        polygonStallMapRef.current.set(polygon, stall);
-        
-        polygon.style.pointerEvents = 'auto';
-        polygon.style.opacity = '1';
-        
-        const clickHandler = (e) => {
-          e.stopPropagation();
-          handlePolygonClick(stall);
-        };
-        const mouseEnterHandler = () => setHoveredStallId(stall.id);
-        const mouseLeaveHandler = () => setHoveredStallId(null);
-        
-        polygon._clickHandler = clickHandler;
-        polygon._mouseEnterHandler = mouseEnterHandler;
-        polygon._mouseLeaveHandler = mouseLeaveHandler;
-        
-        polygon.addEventListener('click', clickHandler);
-        polygon.addEventListener('mouseenter', mouseEnterHandler);
-        polygon.addEventListener('mouseleave', mouseLeaveHandler);
-      }
-    });
+    console.log(`Mapped ${polygons.length} polygons (${stalls.length} with real stalls, ${polygons.length - stalls.length} virtual)`);
+    setDebugInfo(`Mapped ${polygons.length} polygons (${stalls.length} real stalls, ${polygons.length - stalls.length} virtual)`);
   };
 
   const updatePolygonStyles = () => {
@@ -153,7 +200,10 @@ export default function StallReservation() {
         const isSelected = selectedStalls.some(s => s.id === stall.id);
         const isHovered = hoveredStallId === stall.id && !isSelected;
         
-        if (stall.reserved) {
+        // Check if this is a virtual stall (not in database)
+        const isVirtual = stall.virtual || !stalls.some(s => s.id === stall.id);
+        
+        if (stall.reserved && !isVirtual) {
           polygon.style.fill = 'rgba(100, 100, 100, 0.7)';
           polygon.style.cursor = 'not-allowed';
         } else if (isSelected) {
@@ -169,21 +219,35 @@ export default function StallReservation() {
           polygon.style.filter = 'none';
           polygon.style.cursor = 'pointer';
         } else {
-          polygon.style.fill = getStallFillColor(stall);
-          polygon.style.stroke = 'rgba(255, 255, 255, 0.5)';
-          polygon.style.strokeWidth = '1';
+          // For virtual stalls, use a default color
+          if (isVirtual) {
+            polygon.style.fill = 'rgba(224, 224, 224, 0.4)';
+            polygon.style.stroke = 'rgba(150, 150, 150, 0.6)';
+            polygon.style.strokeWidth = '1';
+          } else {
+            polygon.style.fill = getStallFillColor(stall);
+            polygon.style.stroke = 'rgba(255, 255, 255, 0.5)';
+            polygon.style.strokeWidth = '1';
+          }
           polygon.style.filter = 'none';
           polygon.style.cursor = 'pointer';
         }
         
+        // Always ensure mapped polygons are interactive
         polygon.style.transition = 'all 0.3s ease';
         polygon.style.pointerEvents = 'auto';
         polygon.style.opacity = '1';
+        if (!isVirtual) {
+          polygon.style.cursor = stall.reserved ? 'not-allowed' : 'pointer';
+        }
       } else {
-        polygon.style.fill = 'transparent';
-        polygon.style.stroke = 'none';
-        polygon.style.pointerEvents = 'none';
-        polygon.style.opacity = '0';
+        // Fallback: make unmapped polygons visible but with reduced opacity
+        polygon.style.fill = 'rgba(224, 224, 224, 0.3)';
+        polygon.style.stroke = 'rgba(150, 150, 150, 0.4)';
+        polygon.style.strokeWidth = '1';
+        polygon.style.pointerEvents = 'auto';
+        polygon.style.opacity = '1';
+        polygon.style.cursor = 'pointer';
       }
     });
   };
@@ -199,7 +263,20 @@ export default function StallReservation() {
   };
 
   const handlePolygonClick = (stall) => {
-    if (stall.reserved) return;
+    // Check if this is a virtual stall (not in database)
+    const isVirtual = stall.virtual || !stalls.some(s => s.id === stall.id);
+    
+    if (isVirtual) {
+      setMessage(`This stall is not available in the database. Please select a stall that exists (A-Z).`);
+      setTimeout(() => setMessage(''), 3000);
+      return;
+    }
+    
+    if (stall.reserved) {
+      setMessage(`This stall is already reserved.`);
+      setTimeout(() => setMessage(''), 3000);
+      return;
+    }
     
     const isSelected = selectedStalls.some(s => s.id === stall.id);
     
@@ -274,7 +351,19 @@ export default function StallReservation() {
   };
 
   const remainingSlots = 3 - userReservations;
-  const hoveredStall = stalls.find(s => s.id === hoveredStallId);
+  // Find hovered stall from stalls array or get from polygon map
+  let hoveredStall = stalls.find(s => s.id === hoveredStallId);
+  if (!hoveredStall && hoveredStallId && svgRef.current) {
+    // Try to find it from polygon map (for virtual stalls)
+    const polygons = svgRef.current.querySelectorAll('polygon');
+    for (const polygon of polygons) {
+      const stall = polygonStallMapRef.current.get(polygon);
+      if (stall && stall.id === hoveredStallId) {
+        hoveredStall = stall;
+        break;
+      }
+    }
+  }
 
   if (!user) return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
 
@@ -334,6 +423,13 @@ export default function StallReservation() {
           </div>
         )}
 
+        {/* Debug Info */}
+        {debugInfo && (
+          <div className="mb-4 p-3 bg-blue-50 text-blue-800 text-sm rounded-lg border border-blue-200">
+            Debug: {debugInfo}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Stall Map Section */}
           <div className="lg:col-span-3">
@@ -374,6 +470,7 @@ export default function StallReservation() {
                   viewBox="0 0 2528 2825" 
                   className="w-full h-auto"
                   preserveAspectRatio="xMidYMid meet"
+                  style={{ position: 'relative' }}
                 >
                   <defs>
                     <filter id="blur-stroke" x="-50%" y="-50%" width="200%" height="200%">
@@ -389,6 +486,7 @@ export default function StallReservation() {
                     width="2528" 
                     height="2825"
                     preserveAspectRatio="xMidYMid meet"
+                    style={{ pointerEvents: 'none' }}
                   />
 
                   {/* All 436 polygons from the map */}
@@ -925,7 +1023,10 @@ export default function StallReservation() {
         <div className="fixed top-24 right-6 bg-gray-900 text-white p-4 rounded-lg shadow-lg z-40 pointer-events-none">
           <div className="font-semibold">{hoveredStall.name}</div>
           <div className="text-sm text-gray-300 mt-1">Size: {hoveredStall.size}</div>
-          {hoveredStall.reserved && (
+          {hoveredStall.virtual && (
+            <div className="text-sm text-yellow-300 mt-1">(Not in database)</div>
+          )}
+          {hoveredStall.reserved && !hoveredStall.virtual && (
             <div className="text-sm text-red-300 mt-1">(Reserved)</div>
           )}
         </div>
