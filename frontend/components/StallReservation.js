@@ -140,7 +140,7 @@ export default function StallReservation() {
         polygon.setAttribute('data-stall-id', stall.id);
         polygon.setAttribute('data-stall-name', stall.name || '');
       } else {
-        // Create a virtual stall for unmapped polygons
+        // Fallback: Create a virtual stall for unmapped polygons (shouldn't happen if DB is complete)
         const virtualStall = {
           id: `virtual-${index}`,
           name: `Stall ${index + 1}`,
