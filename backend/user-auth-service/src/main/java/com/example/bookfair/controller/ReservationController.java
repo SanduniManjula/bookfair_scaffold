@@ -16,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/reservations")
@@ -44,7 +45,10 @@ public class ReservationController {
 
     @GetMapping("/all")
     public List<Stall> allStalls() {
-        return stallRepo.findAll();
+        // Return stalls sorted by ID to maintain polygon order (stalls are created in polygon index order)
+        return stallRepo.findAll().stream()
+            .sorted((a, b) -> Long.compare(a.getId(), b.getId()))
+            .collect(Collectors.toList());
     }
 
     @PostMapping("/reserve")
