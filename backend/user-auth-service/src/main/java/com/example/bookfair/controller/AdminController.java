@@ -236,12 +236,34 @@ public class AdminController {
 
         try {
             MapLayout layout = layoutOpt.get();
+            System.out.println("Loading map layout. ID: " + layout.getId());
+            System.out.println("Layout data length: " + (layout.getLayoutData() != null ? layout.getLayoutData().length() : 0));
+            
             Map<String, Object> layoutData = objectMapper.readValue(
                 layout.getLayoutData(),
                 Map.class
             );
+            
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> halls = (List<Map<String, Object>>) layoutData.get("halls");
+            if (halls != null) {
+                System.out.println("Loaded map layout with " + halls.size() + " halls");
+                int totalStalls = halls.stream()
+                    .mapToInt(hall -> {
+                        Object stallsObj = hall.get("stalls");
+                        if (stallsObj instanceof List) {
+                            return ((List<?>) stallsObj).size();
+                        }
+                        return 0;
+                    })
+                    .sum();
+                System.out.println("Total stalls: " + totalStalls);
+            }
+            
             return ResponseEntity.ok(layoutData);
         } catch (Exception e) {
+            System.err.println("Failed to parse map layout: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to parse map layout: " + e.getMessage()));
         }
@@ -258,17 +280,285 @@ public class AdminController {
         }
 
         try {
+            // Validate request has halls
+            if (!request.containsKey("halls") || !(request.get("halls") instanceof List)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("error", "Invalid request: 'halls' array is required"));
+            }
+            
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> halls = (List<Map<String, Object>>) request.get("halls");
+            
+            // Validate at least one hall with stalls
+            boolean hasStalls = halls.stream()
+                .anyMatch(hall -> {
+                    Object stallsObj = hall.get("stalls");
+                    if (stallsObj instanceof List) {
+                        @SuppressWarnings("unchecked")
+                        List<?> stalls = (List<?>) stallsObj;
+                        return !stalls.isEmpty();
+                    }
+                    return false;
+                });
+            
+            if (!hasStalls) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("error", "At least one hall with stalls is required"));
+            }
+            
+            // Create/update stalls in database from map layout
+            int createdStalls = 0;
+            int updatedStalls = 0;
+            int errorStalls = 0;
+            
+            for (Map<String, Object> hall : halls) {
+                Object stallsObj = hall.get("stalls");
+                if (stallsObj instanceof List) {
+                    @SuppressWarnings("unchecked")
+                    List<Map<String, Object>> stalls = (List<Map<String, Object>>) stallsObj;
+                    
+                    for (Map<String, Object> stallData : stalls) {
+                        try {
+                            String stallId = (String) stallData.get("stallId");
+                            if (stallId == null || stallId.isEmpty()) {
+                                stallId = (String) stallData.get("id");
+                            }
+                            if (stallId == null || stallId.isEmpty()) {
+                                System.out.println("Warning: Skipping stall without ID: " + stallData);
+                                continue; // Skip stalls without ID
+                            }
+                            
+                            // Find existing stall by name (use final variable for lambda)
+                            final String finalStallId = stallId;
+                            Optional<com.example.bookfair.user.model.Stall> existingStallOpt = 
+                                stallRepository.findAll().stream()
+                                    .filter(s -> finalStallId.equals(s.getName()))
+                                    .findFirst();
+                            
+                            com.example.bookfair.user.model.Stall stall;
+                            if (existingStallOpt.isPresent()) {
+                                stall = existingStallOpt.get();
+                                updatedStalls++;
+                            } else {
+                                stall = new com.example.bookfair.user.model.Stall();
+                                createdStalls++;
+                            }
+                            
+                            // Update stall properties
+                            stall.setName(stallId);
+                            
+                            // Get size from stallData or default to SMALL
+                            String size = (String) stallData.get("size");
+                            if (size == null || size.isEmpty()) {
+                                size = "SMALL";
+                            }
+                            stall.setSize(size.toUpperCase());
+                            
+                            // Get coordinates
+                            Object xObj = stallData.get("x");
+                            Object yObj = stallData.get("y");
+                            if (xObj instanceof Number) {
+                                stall.setX(((Number) xObj).intValue());
+                            } else {
+                                stall.setX(0);
+                            }
+                            if (yObj instanceof Number) {
+                                stall.setY(((Number) yObj).intValue());
+                            } else {
+                                stall.setY(0);
+                            }
+                            
+                            // Preserve reserved status if stall already exists
+                            if (existingStallOpt.isEmpty()) {
+                                stall.setReserved(false);
+                            }
+                            
+                            stallRepository.save(stall);
+                        } catch (Exception e) {
+                            errorStalls++;
+                            System.err.println("Error saving stall: " + stallData + " - " + e.getMessage());
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+            
+            if (errorStalls > 0) {
+                System.err.println("Warning: " + errorStalls + " stalls failed to save");
+            }
+            
+            // Convert to JSON string
             String layoutJson = objectMapper.writeValueAsString(request);
             
+            // Create and save map layout
             MapLayout layout = new MapLayout();
             layout.setLayoutData(layoutJson);
             
-            mapLayoutRepository.save(layout);
+            // Save to database
+            MapLayout savedLayout = mapLayoutRepository.save(layout);
+            
+            // Verify it was saved by reading it back
+            Optional<MapLayout> verifyLayout = mapLayoutRepository.findById(savedLayout.getId());
+            if (verifyLayout.isEmpty()) {
+                System.err.println("WARNING: Map layout was not saved to database!");
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(Map.of("error", "Failed to save map layout to database"));
+            }
+            
+            int totalStalls = halls.stream()
+                .mapToInt(hall -> {
+                    Object stallsObj = hall.get("stalls");
+                    if (stallsObj instanceof List) {
+                        return ((List<?>) stallsObj).size();
+                    }
+                    return 0;
+                })
+                .sum();
+            
+            System.out.println("✓ Map layout saved successfully to database!");
+            System.out.println("  - ID: " + savedLayout.getId());
+            System.out.println("  - Total halls: " + halls.size());
+            System.out.println("  - Total stalls: " + totalStalls);
+            System.out.println("  - Created stalls: " + createdStalls);
+            System.out.println("  - Updated stalls: " + updatedStalls);
+            if (errorStalls > 0) {
+                System.out.println("  - Error stalls: " + errorStalls);
+            }
+            System.out.println("  - Data size: " + layoutJson.length() + " characters");
+            System.out.println("  - Created at: " + savedLayout.getCreatedAt());
 
-            return ResponseEntity.ok(Map.of("message", "Map layout saved successfully"));
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Map layout saved successfully");
+            response.put("id", savedLayout.getId());
+            response.put("hallsCount", halls.size());
+            response.put("totalStalls", totalStalls);
+            response.put("createdStalls", createdStalls);
+            response.put("updatedStalls", updatedStalls);
+            if (errorStalls > 0) {
+                response.put("errorStalls", errorStalls);
+                response.put("warning", errorStalls + " stalls failed to save");
+            }
+            
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
+            System.err.println("Failed to save map layout: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to save map layout: " + e.getMessage()));
+        }
+    }
+
+    // Clear all reservations and reset stall statuses
+    @DeleteMapping("/clear-reservations")
+    public ResponseEntity<?> clearAllReservations(Authentication authentication) {
+        if (!isAdmin(authentication)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "Admin access required"));
+        }
+
+        try {
+            // Get all reservations
+            List<Reservation> allReservations = reservationRepository.findAll();
+            long count = allReservations.size();
+
+            // Delete all reservations
+            reservationRepository.deleteAll();
+
+            // Reset all stalls to unreserved status
+            List<com.example.bookfair.user.model.Stall> allStalls = stallRepository.findAll();
+            for (com.example.bookfair.user.model.Stall stall : allStalls) {
+                stall.setReserved(false);
+                stallRepository.save(stall);
+            }
+
+            return ResponseEntity.ok(Map.of(
+                "message", "All reservations cleared successfully",
+                "deletedReservations", count,
+                "resetStalls", allStalls.size()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to clear reservations: " + e.getMessage()));
+        }
+    }
+
+    // Clear all data (reservations, map layouts, and optionally users)
+    @DeleteMapping("/clear-all-data")
+    public ResponseEntity<?> clearAllData(
+            Authentication authentication,
+            @RequestParam(defaultValue = "false") boolean includeUsers) {
+        if (!isAdmin(authentication)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "Admin access required"));
+        }
+
+        try {
+            // Delete all reservations
+            long reservationCount = reservationRepository.count();
+            reservationRepository.deleteAll();
+
+            // Reset all stalls to unreserved status
+            List<com.example.bookfair.user.model.Stall> allStalls = stallRepository.findAll();
+            for (com.example.bookfair.user.model.Stall stall : allStalls) {
+                stall.setReserved(false);
+                stallRepository.save(stall);
+            }
+
+            // Delete all map layouts
+            long mapLayoutCount = mapLayoutRepository.count();
+            mapLayoutRepository.deleteAll();
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "All data cleared successfully");
+            response.put("deletedReservations", reservationCount);
+            response.put("resetStalls", allStalls.size());
+            response.put("deletedMapLayouts", mapLayoutCount);
+
+            // Optionally delete users (except admins)
+            if (includeUsers) {
+                List<User> nonAdminUsers = userRepository.findAll().stream()
+                    .filter(u -> !"ADMIN".equals(u.getRole()))
+                    .collect(Collectors.toList());
+                long userCount = nonAdminUsers.size();
+                userRepository.deleteAll(nonAdminUsers);
+                response.put("deletedUsers", userCount);
+            }
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to clear data: " + e.getMessage()));
+        }
+    }
+
+    // Delete all stalls (stalls are now created when map is saved)
+    @DeleteMapping("/delete-all-stalls")
+    public ResponseEntity<?> deleteAllStalls(Authentication authentication) {
+        if (!isAdmin(authentication)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "Admin access required"));
+        }
+
+        try {
+            // Delete all reservations first (they reference stalls)
+            long reservationCount = reservationRepository.count();
+            reservationRepository.deleteAll();
+            
+            // Delete all existing stalls
+            long existingCount = stallRepository.count();
+            stallRepository.deleteAll();
+            
+            return ResponseEntity.ok(Map.of(
+                "message", "All stalls and reservations deleted successfully",
+                "deletedStalls", existingCount,
+                "deletedReservations", reservationCount,
+                "note", "Stalls will be created automatically when you save a map layout."
+            ));
+        } catch (Exception e) {
+            System.err.println("Failed to delete stalls: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to delete stalls: " + e.getMessage()));
         }
     }
 }

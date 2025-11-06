@@ -112,9 +112,15 @@ export default function MapCanvas({ halls, setHalls, mode, onStallClick, selecte
       if (hall) {
         const stallCount = hall.stalls.length;
         const hallPrefix = hall.name.match(/[A-Z]/)?.[0] || 'A';
+        // Format stall ID with leading zeros for single digits (A01-A09, then A10, A11, etc.)
+        const stallNumber = stallCount + 1;
+        const stallId = stallNumber < 10 
+          ? `${hallPrefix}0${stallNumber}` 
+          : `${hallPrefix}${stallNumber}`;
+        
         const newStall = {
           id: `stall-${Date.now()}`,
-          stallId: `${hallPrefix}${stallCount + 1}`,
+          stallId: stallId,
           x: x,
           y: y,
           width: 80,
@@ -489,17 +495,6 @@ export default function MapCanvas({ halls, setHalls, mode, onStallClick, selecte
         </button>
       </div>
 
-      {/* Instructions */}
-      <div className="absolute top-4 left-4 bg-white/90 border border-gray-300 rounded shadow p-3 text-xs z-10 max-w-xs">
-        <div className="font-semibold mb-2">Controls:</div>
-        <div className="space-y-1 text-gray-600">
-          <div>• <kbd className="px-1 bg-gray-100 rounded">Wheel</kbd> - Zoom</div>
-          <div>• <kbd className="px-1 bg-gray-100 rounded">Shift + Drag</kbd> - Pan</div>
-          <div>• <kbd className="px-1 bg-gray-100 rounded">G</kbd> - Toggle Grid</div>
-          <div>• <kbd className="px-1 bg-gray-100 rounded">Delete</kbd> - Remove Selected</div>
-          <div>• <kbd className="px-1 bg-gray-100 rounded">Esc</kbd> - Deselect</div>
-        </div>
-      </div>
     </div>
   );
 }

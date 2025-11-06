@@ -122,18 +122,44 @@ export default function MapViewCanvas({ halls, stalls, selectedStalls, onStallCl
     return 1;
   };
 
+  // Helper function to normalize stall names (handles A08 vs A8, A01 vs A1, etc.)
+  const normalizeStallName = (name) => {
+    if (!name) return '';
+    const trimmed = String(name).trim();
+    // Match pattern: letter(s) followed by number(s)
+    const match = trimmed.match(/^([A-Za-z]+)(\d+)$/);
+    if (match) {
+      const letter = match[1];
+      const number = parseInt(match[2], 10); // Remove leading zeros by parsing as int
+      return `${letter}${number}`;
+    }
+    return trimmed;
+  };
+
   // Create a map of stall names to stall objects for quick lookup
   const stallMap = new Map();
   stalls.forEach(stall => {
     if (stall.name) {
-      stallMap.set(stall.name, stall);
-      stallMap.set(stall.name.toUpperCase(), stall);
-      stallMap.set(stall.name.trim(), stall);
+      const name = stall.name.trim();
+      // Add exact name (all variations)
+      stallMap.set(name, stall);
+      stallMap.set(name.toUpperCase(), stall);
+      stallMap.set(name.toLowerCase(), stall);
+      
+      // Add normalized version (A08 -> A8, A01 -> A1, etc.)
+      const normalized = normalizeStallName(name);
+      if (normalized !== name) {
+        stallMap.set(normalized, stall);
+        stallMap.set(normalized.toUpperCase(), stall);
+        stallMap.set(normalized.toLowerCase(), stall);
+      }
     }
     if (stall.id) {
       stallMap.set(stall.id, stall);
       stallMap.set(String(stall.id), stall);
-      stallMap.set(parseInt(stall.id), stall);
+      if (!isNaN(stall.id)) {
+        stallMap.set(parseInt(stall.id), stall);
+      }
     }
   });
   
@@ -207,76 +233,143 @@ export default function MapViewCanvas({ halls, stalls, selectedStalls, onStallCl
                 {hall.stalls.map((stallData, index) => {
                   // Find the corresponding stall from the database by name (e.g., "A01", "B87")
                   const stallId = stallData.stallId || stallData.id || stallData.name;
-                  let stall = stallMap.get(stallId);
+                  let stall = null;
                   
-                  // If not found by exact match, try multiple matching strategies
-                  if (!stall) {
-                    stall = stalls.find(s => {
-                      // Try matching by name (string comparison, case-insensitive)
-                      if (s.name && typeof s.name === 'string' && stallId && typeof stallId === 'string') {
-                        const sName = s.name.trim().toUpperCase();
-                        const mapName = stallId.trim().toUpperCase();
-                        if (sName === mapName) return true;
-                        // Try partial match (e.g., "A1" matches "A01")
-                        if (sName.replace(/^0+/, '') === mapName.replace(/^0+/, '')) return true;
+                  // First, try exact match from stallMap
+                  if (stallId) {
+                    const normalizedId = String(stallId).trim();
+                    // Try exact match first
+                    stall = stallMap.get(normalizedId) || 
+                            stallMap.get(normalizedId.toUpperCase()) || 
+                            stallMap.get(normalizedId.toLowerCase());
+                    
+                    // Try normalized version (A08 -> A8, A01 -> A1, etc.)
+                    if (!stall) {
+                      const normalized = normalizeStallName(normalizedId);
+                      if (normalized !== normalizedId) {
+                        stall = stallMap.get(normalized) || 
+                                stallMap.get(normalized.toUpperCase()) || 
+                                stallMap.get(normalized.toLowerCase());
                       }
-                      // Try matching by ID (numeric or string)
-                      if (s.id && stallId) {
-                        if (s.id === stallId || s.id === parseInt(stallId) || String(s.id) === String(stallId)) {
+                    }
+                    
+                    // Try with leading zero (A18 -> A018, A8 -> A08)
+                    if (!stall) {
+                      const match = normalizedId.match(/^([A-Za-z]+)(\d+)$/);
+                      if (match) {
+                        const letter = match[1];
+                        const number = parseInt(match[2], 10);
+                        const withLeadingZero = `${letter}${String(number).padStart(2, '0')}`;
+                        stall = stallMap.get(withLeadingZero) || 
+                                stallMap.get(withLeadingZero.toUpperCase()) || 
+                                stallMap.get(withLeadingZero.toLowerCase());
+                      }
+                    }
+                  }
+                  
+                  // If still not found, try direct search with strict matching
+                  if (!stall && stallId) {
+                    const normalizedId = String(stallId).trim();
+                    const mapNormalized = normalizeStallName(normalizedId);
+                    
+                    stall = stalls.find(s => {
+                      if (!s.name) return false;
+                      
+                      const sName = String(s.name).trim();
+                      const sNormalized = normalizeStallName(sName);
+                      
+                      // Exact name match (case-insensitive)
+                      if (sName.toLowerCase() === normalizedId.toLowerCase() || 
+                          sName.toUpperCase() === normalizedId.toUpperCase()) {
+                        return true;
+                      }
+                      
+                      // Normalized match (A08 vs A8, A01 vs A1, etc.)
+                      if (sNormalized.toLowerCase() === mapNormalized.toLowerCase() ||
+                          sNormalized.toUpperCase() === mapNormalized.toUpperCase()) {
+                        return true;
+                      }
+                      
+                      // Try with leading zero (A18 -> A018, A8 -> A08)
+                      const mapMatch = normalizedId.match(/^([A-Za-z]+)(\d+)$/);
+                      const sMatch = sName.match(/^([A-Za-z]+)(\d+)$/);
+                      if (mapMatch && sMatch) {
+                        const mapLetter = mapMatch[1];
+                        const mapNumber = parseInt(mapMatch[2], 10);
+                        const sLetter = sMatch[1];
+                        const sNumber = parseInt(sMatch[2], 10);
+                        if (mapLetter.toLowerCase() === sLetter.toLowerCase() && 
+                            mapNumber === sNumber) {
                           return true;
                         }
                       }
-                      // Try matching by index if available
-                      if (index < stalls.length && s.id === stalls[index].id) {
+                      
+                      // ID match (exact only)
+                      if (s.id && String(s.id).trim() === normalizedId) {
                         return true;
                       }
+                      
                       return false;
                     });
                   }
                   
-                  // If stall not found in database, still render it but with default values
+                  // Log if stall is not found for debugging
+                  if (!stall && stallId) {
+                    console.warn(`Stall not found in database: "${stallId}" (from map layout). Available stalls:`, 
+                      stalls.slice(0, 10).map(s => ({ id: s.id, name: s.name })));
+                  }
+                  
+                  // If stall not found in database, still render it but make it non-clickable
+                  // DO NOT use index-based fallback as it causes incorrect matching
                   if (!stall) {
-                    console.warn('Stall not found in database:', stallId, 'Map stall index:', index, 'Available stalls:', stalls.slice(0, 5).map(s => ({ id: s.id, name: s.name })));
-                    // Try to use stall by index as fallback
-                    const fallbackStall = stalls[index];
-                    if (fallbackStall) {
-                      stall = fallbackStall;
-                      console.log('Using fallback stall by index:', fallbackStall);
-                    } else {
-                      return (
-                        <Group
-                          key={stallData.id || `stall-${stallId}-${index}`}
-                          x={stallData.x}
-                          y={stallData.y}
-                          onClick={() => {
-                            console.warn('Stall not found in database:', stallId);
-                            if (onStallClick) {
-                              onStallClick(null);
-                            }
-                          }}
+                    return (
+                      <Group
+                        key={stallData.id || `stall-${stallId}-${index}`}
+                        x={stallData.x}
+                        y={stallData.y}
+                        onClick={(e) => {
+                          e.cancelBubble = true;
+                          if (e.evt) {
+                            e.evt.stopPropagation();
+                            e.evt.preventDefault();
+                          }
+                          console.error(`Stall "${stallId}" from map layout not found in database.`, {
+                            mapStallId: stallId,
+                            availableStalls: stalls.slice(0, 10).map(s => ({ id: s.id, name: s.name }))
+                          });
+                          // Don't call onStallClick with null - show error message instead
+                          alert(`Stall "${stallId}" is not available in the database. Please contact admin to sync the map with database stalls.`);
+                        }}
+                        listening={true}
+                      >
+                        <Rect
+                          width={stallData.width || 80}
+                          height={stallData.height || 60}
+                          fill="rgba(224, 224, 224, 0.4)"
+                          stroke="#999"
+                          strokeWidth={1}
+                          opacity={0.5}
                           listening={true}
-                        >
-                          <Rect
-                            width={stallData.width || 80}
-                            height={stallData.height || 60}
-                            fill="rgba(224, 224, 224, 0.4)"
-                            stroke="#999"
-                            strokeWidth={1}
-                            opacity={0.5}
-                            listening={true}
-                          />
-                          <Text
-                            x={5}
-                            y={(stallData.height || 60) / 2 - 5}
-                            text={stallId || 'N/A'}
-                            fontSize={12}
-                            fill="#666"
-                            fontStyle="bold"
-                            listening={false}
-                          />
-                        </Group>
-                      );
-                    }
+                        />
+                        <Text
+                          x={5}
+                          y={(stallData.height || 60) / 2 - 5}
+                          text={stallId || 'N/A'}
+                          fontSize={12}
+                          fill="#666"
+                          fontStyle="bold"
+                          listening={false}
+                        />
+                        <Text
+                          x={5}
+                          y={(stallData.height || 60) / 2 + 10}
+                          text="Not in DB"
+                          fontSize={8}
+                          fill="#ff0000"
+                          listening={false}
+                        />
+                      </Group>
+                    );
                   }
 
                   const isSelected = stall && selectedStalls.some(s => s.id === stall.id);
@@ -290,9 +383,25 @@ export default function MapViewCanvas({ halls, stalls, selectedStalls, onStallCl
                       e.evt.preventDefault();
                     }
                     if (stall && onStallClick) {
+                      console.log(`Stall clicked: Map ID="${stallId}", Matched DB stall:`, {
+                        id: stall.id,
+                        name: stall.name,
+                        size: stall.size,
+                        reserved: stall.reserved
+                      });
+                      // Ensure stall has all required properties
+                      if (!stall.id) {
+                        console.error('Matched stall missing ID:', stall);
+                        return;
+                      }
                       onStallClick(stall);
                     } else if (!stall) {
-                      console.warn('Stall not found in database:', stallId);
+                      console.error(`Stall "${stallId}" from map not found in database. Cannot select.`, {
+                        mapStallId: stallId,
+                        availableStalls: stalls.slice(0, 10).map(s => ({ id: s.id, name: s.name }))
+                      });
+                      // Don't call onStallClick with null - let the user know the stall isn't found
+                      // The stall will still be rendered but not clickable
                     }
                   };
 
@@ -440,15 +549,6 @@ export default function MapViewCanvas({ halls, stalls, selectedStalls, onStallCl
         </button>
       </div>
 
-      {/* Instructions */}
-      <div className="absolute top-4 left-4 bg-white/90 border border-gray-300 rounded shadow p-3 text-xs z-10 max-w-xs">
-        <div className="font-semibold mb-2">Map Controls:</div>
-        <div className="space-y-1 text-gray-600">
-          <div>• <kbd className="px-1 bg-gray-100 rounded">Wheel</kbd> - Zoom</div>
-          <div>• <kbd className="px-1 bg-gray-100 rounded">Shift + Drag</kbd> - Pan</div>
-          <div>• <kbd className="px-1 bg-gray-100 rounded">Click</kbd> - Select Stall</div>
-        </div>
-      </div>
     </div>
   );
 }

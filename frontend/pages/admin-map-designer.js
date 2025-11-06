@@ -91,32 +91,72 @@ export default function AdminMapDesigner() {
       }
 
       const token = localStorage.getItem('token');
+      
+      // Prepare the data to save
+      const mapData = {
+        halls: halls
+      };
+      
+      console.log('Saving map to database:', {
+        hallsCount: halls.length,
+        totalStalls: halls.reduce((sum, h) => sum + (h.stalls?.length || 0), 0),
+        halls: halls.map(h => ({
+          id: h.id,
+          name: h.name,
+          stallsCount: h.stalls?.length || 0,
+          labelX: h.labelX,
+          labelY: h.labelY
+        }))
+      });
+      
+      if (!token) {
+        setMessage('Error: No authentication token found. Please log in again.');
+        setTimeout(() => setMessage(''), 5000);
+        setIsSaving(false);
+        return;
+      }
+
       const res = await fetch('http://localhost:8081/api/admin/map-layout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          halls: halls
-        })
+        body: JSON.stringify(mapData)
       });
 
-      const data = await res.json();
-      
-      if (res.ok) {
-        setMessage('Map saved successfully! The map will be available on the map page.');
-        setTimeout(() => setMessage(''), 5000);
-        console.log('Map saved successfully:', data);
-      } else {
-        const errorMsg = data.error || 'Failed to save map';
+      if (!res.ok) {
+        let errorData;
+        try {
+          errorData = await res.json();
+        } catch (e) {
+          errorData = { error: `HTTP ${res.status}: ${res.statusText}` };
+        }
+        const errorMsg = errorData.error || 'Failed to save map';
         setMessage(`Error: ${errorMsg}`);
         setTimeout(() => setMessage(''), 5000);
-        console.error('Failed to save map:', data);
+        console.error('Failed to save map to database:', errorData);
+        setIsSaving(false);
+        return;
       }
+
+      const data = await res.json();
+      console.log('Map saved successfully to database:', data);
+      const message = `Map saved successfully! ID: ${data.id || 'N/A'}, Halls: ${data.hallsCount || halls.length}, Stalls: ${data.totalStalls || halls.reduce((sum, h) => sum + (h.stalls?.length || 0), 0)}` +
+        (data.createdStalls !== undefined ? ` (Created: ${data.createdStalls}, Updated: ${data.updatedStalls || 0})` : '');
+      setMessage(message);
+      setTimeout(() => setMessage(''), 5000);
     } catch (err) {
       console.error('Failed to save map:', err);
-      setMessage(`Error saving map: ${err.message}`);
+      let errorMessage = 'Error saving map: ';
+      if (err.message) {
+        errorMessage += err.message;
+      } else if (err.name === 'TypeError' && err.message.includes('fetch')) {
+        errorMessage += 'Failed to connect to server. Please check if the backend is running on http://localhost:8081';
+      } else {
+        errorMessage += 'Unknown error occurred';
+      }
+      setMessage(errorMessage);
       setTimeout(() => setMessage(''), 5000);
     } finally {
       setIsSaving(false);
