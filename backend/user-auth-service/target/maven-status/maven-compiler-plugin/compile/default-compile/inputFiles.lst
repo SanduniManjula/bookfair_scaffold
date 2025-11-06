@@ -10,10 +10,12 @@
 /Users/sasandamanahara/Documents/GitHub/bookfair_scaffold/backend/user-auth-service/src/main/java/com/example/bookfair/model/Reservation.java
 /Users/sasandamanahara/Documents/GitHub/bookfair_scaffold/backend/user-auth-service/src/main/java/com/example/bookfair/util/EmailService.java
 /Users/sasandamanahara/Documents/GitHub/bookfair_scaffold/backend/user-auth-service/src/main/java/com/example/bookfair/security/AppConfig.java
+/Users/sasandamanahara/Documents/GitHub/bookfair_scaffold/backend/user-auth-service/src/main/java/com/example/bookfair/repository/MapLayoutRepository.java
 /Users/sasandamanahara/Documents/GitHub/bookfair_scaffold/backend/user-auth-service/src/main/java/com/example/bookfair/controller/AuthController.java
 /Users/sasandamanahara/Documents/GitHub/bookfair_scaffold/backend/user-auth-service/src/main/java/com/example/bookfair/AuthService.java
 /Users/sasandamanahara/Documents/GitHub/bookfair_scaffold/backend/user-auth-service/src/main/java/com/example/bookfair/repository/ReservationRepository.java
 /Users/sasandamanahara/Documents/GitHub/bookfair_scaffold/backend/user-auth-service/src/main/java/com/example/bookfair/config/StallDataInitializer.java
 /Users/sasandamanahara/Documents/GitHub/bookfair_scaffold/backend/user-auth-service/src/main/java/com/example/bookfair/security/JwtAuthenticationFilter.java
+/Users/sasandamanahara/Documents/GitHub/bookfair_scaffold/backend/user-auth-service/src/main/java/com/example/bookfair/model/MapLayout.java
 /Users/sasandamanahara/Documents/GitHub/bookfair_scaffold/backend/user-auth-service/src/main/java/com/example/bookfair/util/QrUtil.java
 /Users/sasandamanahara/Documents/GitHub/bookfair_scaffold/backend/user-auth-service/src/main/java/com/example/bookfair/controller/UserController.java

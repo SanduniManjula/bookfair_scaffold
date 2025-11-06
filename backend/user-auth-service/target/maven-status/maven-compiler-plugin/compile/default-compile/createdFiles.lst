@@ -7,6 +7,7 @@ com/example/bookfair/user/controller/UserController.class
 com/example/bookfair/user/security/SecurityConfig.class
 com/example/bookfair/user/controller/ReservationController.class
 com/example/bookfair/user/controller/AuthController.class
+com/example/bookfair/user/model/MapLayout.class
 com/example/bookfair/user/model/User.class
 com/example/bookfair/user/model/Reservation.class
 com/example/bookfair/util/EmailService.class
@@ -15,6 +16,7 @@ com/example/bookfair/util/QrUtil.class
 com/example/bookfair/user/AuthService.class
 com/example/bookfair/user/repository/UserRepository.class
 com/example/bookfair/config/StallDataInitializer.class
+com/example/bookfair/user/repository/MapLayoutRepository.class
 com/example/bookfair/user/model/Stall.class
 com/example/bookfair/user/security/JwtUtil.class
 com/example/bookfair/user/security/JwtAuthenticationFilter.class

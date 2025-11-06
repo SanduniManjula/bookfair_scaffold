@@ -2,9 +2,12 @@ package com.example.bookfair.user.controller;
 
 import com.example.bookfair.user.model.Reservation;
 import com.example.bookfair.user.model.User;
+import com.example.bookfair.user.model.MapLayout;
 import com.example.bookfair.user.repository.ReservationRepository;
 import com.example.bookfair.user.repository.UserRepository;
 import com.example.bookfair.user.repository.StallRepository;
+import com.example.bookfair.user.repository.MapLayoutRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,7 +34,13 @@ public class AdminController {
     private StallRepository stallRepository;
 
     @Autowired
+    private MapLayoutRepository mapLayoutRepository;
+
+    @Autowired
     private BCryptPasswordEncoder encoder;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     // Helper method to check if user is admin
     private boolean isAdmin(Authentication authentication) {
@@ -210,6 +219,57 @@ public class AdminController {
                 "regularUsers", regularUsers,
                 "totalReservations", totalReservations
         ));
+    }
+
+    // Get map layout
+    @GetMapping("/map-layout")
+    public ResponseEntity<?> getMapLayout(Authentication authentication) {
+        if (!isAdmin(authentication)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "Access denied. Admin role required."));
+        }
+
+        Optional<MapLayout> layoutOpt = mapLayoutRepository.findTopByOrderByIdDesc();
+        if (layoutOpt.isEmpty()) {
+            return ResponseEntity.ok(Map.of("halls", new ArrayList<>()));
+        }
+
+        try {
+            MapLayout layout = layoutOpt.get();
+            Map<String, Object> layoutData = objectMapper.readValue(
+                layout.getLayoutData(),
+                Map.class
+            );
+            return ResponseEntity.ok(layoutData);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to parse map layout: " + e.getMessage()));
+        }
+    }
+
+    // Save map layout
+    @PostMapping("/map-layout")
+    public ResponseEntity<?> saveMapLayout(
+            @RequestBody Map<String, Object> request,
+            Authentication authentication) {
+        if (!isAdmin(authentication)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "Access denied. Admin role required."));
+        }
+
+        try {
+            String layoutJson = objectMapper.writeValueAsString(request);
+            
+            MapLayout layout = new MapLayout();
+            layout.setLayoutData(layoutJson);
+            
+            mapLayoutRepository.save(layout);
+
+            return ResponseEntity.ok(Map.of("message", "Map layout saved successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to save map layout: " + e.getMessage()));
+        }
     }
 }
 
