@@ -4,15 +4,13 @@ import About from "../components/About";
 import HowItWorks from "../components/HowItWorks";
 import CTABanner from "../components/CTABanner";
 import Footer from "../components/Footer";
-import GlobalStyles from "../components/GlobalStyles";
 import { useSmoothScroll } from "../hooks/useSmoothScroll";
 
 export default function Home() {
   useSmoothScroll();
 
   return (
-    <div style={styles.page}>
-      <GlobalStyles />
+    <div className="m-0 p-0 font-sans overflow-x-hidden">
       <Navbar />
       <Hero />
       <About />
@@ -22,12 +20,3 @@ export default function Home() {
     </div>
   );
 }
-
-const styles = {
-  page: {
-    margin: 0,
-    padding: 0,
-    fontFamily: "'Inter', 'Segoe UI', 'Roboto', sans-serif",
-    overflowX: "hidden",
-  },
-};

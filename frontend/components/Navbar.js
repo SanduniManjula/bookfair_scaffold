@@ -1,102 +1,76 @@
+import { useState } from "react";
 import { useRouter } from "next/router";
 
 export default function Navbar() {
   const router = useRouter();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <nav style={styles.navbar}>
-      <div className="nav-container" style={styles.navContainer}>
-        <div style={styles.logo} onClick={() => router.push('/')}>
-          📚 Colombo Bookfair
-        </div>
-        <div className="menu-items" style={styles.menuItems}>
-          <a href="#home" style={styles.menuLink}>Home</a>
-          <a href="#about" style={styles.menuLink}>About</a>
-          <a href="#reserve" style={styles.menuLink}>Reserve Stalls</a>
-          <a href="#contact" style={styles.menuLink}>Contact</a>
-        </div>
-        <div style={styles.navButtons}>
-          <button 
-            onClick={() => router.push('/login')} 
-            style={styles.loginButton}
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md shadow-md py-4">
+      <div className="max-w-7xl mx-auto px-4 md:px-8">
+        <div className="flex justify-between items-center">
+          <div 
+            className="text-xl md:text-2xl font-bold text-gray-900 cursor-pointer"
+            onClick={() => router.push('/')}
           >
-            Login
-          </button>
-          <button 
-            onClick={() => router.push('/register')} 
-            style={styles.registerButton}
+            📚 Colombo Bookfair
+          </div>
+          <div className="hidden md:flex items-center gap-8">
+            <a href="#home" className="text-gray-700 font-medium hover:text-blue-600 transition-colors">Home</a>
+            <a href="#about" className="text-gray-700 font-medium hover:text-blue-600 transition-colors">About</a>
+            <a href="#reserve" className="text-gray-700 font-medium hover:text-blue-600 transition-colors">Reserve Stalls</a>
+            <a href="#contact" className="text-gray-700 font-medium hover:text-blue-600 transition-colors">Contact</a>
+          </div>
+          <div className="hidden md:flex gap-4">
+            <button 
+              onClick={() => router.push('/login')} 
+              className="px-6 py-2 bg-transparent text-gray-700 border border-gray-700 rounded-md cursor-pointer text-sm font-medium hover:bg-gray-50 transition-colors"
+            >
+              Login
+            </button>
+            <button 
+              onClick={() => router.push('/register')} 
+              className="px-6 py-2 bg-blue-600 text-white border-none rounded-md cursor-pointer text-sm font-medium hover:bg-blue-700 transition-colors"
+            >
+              Register
+            </button>
+          </div>
+          <button
+            className="md:hidden text-gray-700 hover:text-blue-600"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
-            Register
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {mobileMenuOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              )}
+            </svg>
           </button>
         </div>
+        {mobileMenuOpen && (
+          <div className="md:hidden mt-4 flex flex-col gap-4">
+            <a href="#home" className="text-gray-700 font-medium hover:text-blue-600 transition-colors" onClick={() => setMobileMenuOpen(false)}>Home</a>
+            <a href="#about" className="text-gray-700 font-medium hover:text-blue-600 transition-colors" onClick={() => setMobileMenuOpen(false)}>About</a>
+            <a href="#reserve" className="text-gray-700 font-medium hover:text-blue-600 transition-colors" onClick={() => setMobileMenuOpen(false)}>Reserve Stalls</a>
+            <a href="#contact" className="text-gray-700 font-medium hover:text-blue-600 transition-colors" onClick={() => setMobileMenuOpen(false)}>Contact</a>
+            <div className="flex flex-col gap-2 pt-2">
+              <button 
+                onClick={() => router.push('/login')} 
+                className="px-6 py-2 bg-transparent text-gray-700 border border-gray-700 rounded-md cursor-pointer text-sm font-medium hover:bg-gray-50 transition-colors"
+              >
+                Login
+              </button>
+              <button 
+                onClick={() => router.push('/register')} 
+                className="px-6 py-2 bg-blue-600 text-white border-none rounded-md cursor-pointer text-sm font-medium hover:bg-blue-700 transition-colors"
+              >
+                Register
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );
 }
-
-const styles = {
-  navbar: {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 1000,
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
-    backdropFilter: "blur(10px)",
-    boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
-    padding: "1rem 0",
-  },
-  navContainer: {
-    maxWidth: "1200px",
-    margin: "0 auto",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: "0 2rem",
-  },
-  logo: {
-    fontSize: "1.5rem",
-    fontWeight: "bold",
-    color: "#1a1a1a",
-    cursor: "pointer",
-  },
-  menuItems: {
-    display: "flex",
-    gap: "2rem",
-    alignItems: "center",
-  },
-  menuLink: {
-    textDecoration: "none",
-    color: "#333",
-    fontWeight: "500",
-    fontSize: "1rem",
-    transition: "color 0.3s",
-  },
-  navButtons: {
-    display: "flex",
-    gap: "1rem",
-  },
-  loginButton: {
-    padding: "0.5rem 1.5rem",
-    backgroundColor: "transparent",
-    color: "#333",
-    border: "1px solid #333",
-    borderRadius: "6px",
-    cursor: "pointer",
-    fontSize: "0.95rem",
-    fontWeight: "500",
-    transition: "all 0.3s",
-  },
-  registerButton: {
-    padding: "0.5rem 1.5rem",
-    backgroundColor: "#2563eb",
-    color: "white",
-    border: "none",
-    borderRadius: "6px",
-    cursor: "pointer",
-    fontSize: "0.95rem",
-    fontWeight: "500",
-    transition: "all 0.3s",
-  },
-};
-

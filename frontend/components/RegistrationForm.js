@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/router";
 
 export default function RegistrationForm() {
@@ -16,32 +16,6 @@ export default function RegistrationForm() {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
-
-  // Add form-specific styles
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.textContent = `
-      input:focus, textarea:focus {
-        outline: none;
-        border-color: #2563eb !important;
-        border-width: 2px !important;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-      }
-      a:hover {
-        text-decoration: underline;
-      }
-      @media (max-width: 768px) {
-        .form-card {
-          padding: 2rem 1.5rem !important;
-        }
-        .form-title {
-          font-size: 2rem !important;
-        }
-      }
-    `;
-    document.head.appendChild(style);
-    return () => document.head.removeChild(style);
-  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -144,14 +118,14 @@ export default function RegistrationForm() {
 
   if (success) {
     return (
-      <div style={styles.successContainer}>
-        <div style={styles.successCard}>
-          <div style={styles.successIcon}>🎉</div>
-          <h2 style={styles.successTitle}>Registration Successful!</h2>
-          <p style={styles.successText}>
+      <div className="min-h-screen flex items-center justify-center p-8 mt-20 bg-gradient-to-br from-gray-50 via-blue-100 to-gray-200">
+        <div className="bg-white rounded-2xl p-12 shadow-2xl max-w-md w-full text-center">
+          <div className="text-6xl mb-4">🎉</div>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Registration Successful!</h2>
+          <p className="text-lg text-gray-600 mb-2">
             Please check your email to confirm your account.
           </p>
-          <p style={styles.successSubtext}>
+          <p className="text-sm text-gray-500 mt-4">
             Redirecting to login page...
           </p>
         </div>
@@ -160,168 +134,174 @@ export default function RegistrationForm() {
   }
 
   return (
-    <div style={styles.container}>
-      <div className="form-card" style={styles.formCard}>
-        <div style={styles.formHeader}>
-          <h1 className="form-title" style={styles.title}>Create Your Account</h1>
-          <p style={styles.subtitle}>
+    <div className="min-h-screen flex items-center justify-center p-8 mt-20 bg-gradient-to-br from-gray-50 via-blue-100 to-gray-200">
+      <div className="bg-white rounded-2xl p-8 md:p-12 shadow-2xl max-w-2xl w-full z-10">
+        <div className="text-center mb-10">
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">Create Your Account</h1>
+          <p className="text-base text-gray-600 leading-relaxed">
             Register your publishing business to reserve stalls at the Colombo International Bookfair.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} style={styles.form}>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           {/* Business Name */}
-          <div style={styles.formGroup}>
-            <label style={styles.label}>
-              Business Name <span style={styles.required}>*</span>
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-gray-700">
+              Business Name <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               name="businessName"
               value={form.businessName}
               onChange={handleChange}
-              style={{
-                ...styles.input,
-                ...(errors.businessName ? styles.inputError : {}),
-              }}
+              className={`px-4 py-3 text-base border rounded-lg transition-all font-sans ${
+                errors.businessName 
+                  ? "border-red-500 border-2" 
+                  : "border-gray-300"
+              }`}
               placeholder="Enter your business name"
             />
             {errors.businessName && (
-              <span style={styles.errorText}>{errors.businessName}</span>
+              <span className="text-sm text-red-500 mt-1">{errors.businessName}</span>
             )}
           </div>
 
           {/* Contact Person */}
-          <div style={styles.formGroup}>
-            <label style={styles.label}>
-              Contact Person <span style={styles.required}>*</span>
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-gray-700">
+              Contact Person <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               name="contactPerson"
               value={form.contactPerson}
               onChange={handleChange}
-              style={{
-                ...styles.input,
-                ...(errors.contactPerson ? styles.inputError : {}),
-              }}
+              className={`px-4 py-3 text-base border rounded-lg transition-all font-sans ${
+                errors.contactPerson 
+                  ? "border-red-500 border-2" 
+                  : "border-gray-300"
+              }`}
               placeholder="Enter contact person name"
             />
             {errors.contactPerson && (
-              <span style={styles.errorText}>{errors.contactPerson}</span>
+              <span className="text-sm text-red-500 mt-1">{errors.contactPerson}</span>
             )}
           </div>
 
           {/* Email */}
-          <div style={styles.formGroup}>
-            <label style={styles.label}>
-              Email Address <span style={styles.required}>*</span>
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-gray-700">
+              Email Address <span className="text-red-500">*</span>
             </label>
             <input
               type="email"
               name="email"
               value={form.email}
               onChange={handleChange}
-              style={{
-                ...styles.input,
-                ...(errors.email ? styles.inputError : {}),
-              }}
+              className={`px-4 py-3 text-base border rounded-lg transition-all font-sans ${
+                errors.email 
+                  ? "border-red-500 border-2" 
+                  : "border-gray-300"
+              }`}
               placeholder="Enter your email address"
             />
             {errors.email && (
-              <span style={styles.errorText}>{errors.email}</span>
+              <span className="text-sm text-red-500 mt-1">{errors.email}</span>
             )}
           </div>
 
           {/* Phone Number */}
-          <div style={styles.formGroup}>
-            <label style={styles.label}>
-              Phone Number <span style={styles.required}>*</span>
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-gray-700">
+              Phone Number <span className="text-red-500">*</span>
             </label>
             <input
               type="tel"
               name="phone"
               value={form.phone}
               onChange={handleChange}
-              style={{
-                ...styles.input,
-                ...(errors.phone ? styles.inputError : {}),
-              }}
+              className={`px-4 py-3 text-base border rounded-lg transition-all font-sans ${
+                errors.phone 
+                  ? "border-red-500 border-2" 
+                  : "border-gray-300"
+              }`}
               placeholder="Enter your phone number"
             />
             {errors.phone && (
-              <span style={styles.errorText}>{errors.phone}</span>
+              <span className="text-sm text-red-500 mt-1">{errors.phone}</span>
             )}
           </div>
 
           {/* Address */}
-          <div style={styles.formGroup}>
-            <label style={styles.label}>
-              Address <span style={styles.required}>*</span>
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-gray-700">
+              Address <span className="text-red-500">*</span>
             </label>
             <textarea
               name="address"
               value={form.address}
               onChange={handleChange}
               rows="3"
-              style={{
-                ...styles.input,
-                ...styles.textarea,
-                ...(errors.address ? styles.inputError : {}),
-              }}
+              className={`px-4 py-3 text-base border rounded-lg transition-all font-sans resize-y min-h-[80px] ${
+                errors.address 
+                  ? "border-red-500 border-2" 
+                  : "border-gray-300"
+              }`}
               placeholder="Enter your business address"
             />
             {errors.address && (
-              <span style={styles.errorText}>{errors.address}</span>
+              <span className="text-sm text-red-500 mt-1">{errors.address}</span>
             )}
           </div>
 
           {/* Password */}
-          <div style={styles.formGroup}>
-            <label style={styles.label}>
-              Password <span style={styles.required}>*</span>
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-gray-700">
+              Password <span className="text-red-500">*</span>
             </label>
             <input
               type="password"
               name="password"
               value={form.password}
               onChange={handleChange}
-              style={{
-                ...styles.input,
-                ...(errors.password ? styles.inputError : {}),
-              }}
+              className={`px-4 py-3 text-base border rounded-lg transition-all font-sans ${
+                errors.password 
+                  ? "border-red-500 border-2" 
+                  : "border-gray-300"
+              }`}
               placeholder="Enter your password"
             />
             {errors.password && (
-              <span style={styles.errorText}>{errors.password}</span>
+              <span className="text-sm text-red-500 mt-1">{errors.password}</span>
             )}
           </div>
 
           {/* Confirm Password */}
-          <div style={styles.formGroup}>
-            <label style={styles.label}>
-              Confirm Password <span style={styles.required}>*</span>
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-gray-700">
+              Confirm Password <span className="text-red-500">*</span>
             </label>
             <input
               type="password"
               name="confirmPassword"
               value={form.confirmPassword}
               onChange={handleChange}
-              style={{
-                ...styles.input,
-                ...(errors.confirmPassword ? styles.inputError : {}),
-              }}
+              className={`px-4 py-3 text-base border rounded-lg transition-all font-sans ${
+                errors.confirmPassword 
+                  ? "border-red-500 border-2" 
+                  : "border-gray-300"
+              }`}
               placeholder="Confirm your password"
             />
             {errors.confirmPassword && (
-              <span style={styles.errorText}>{errors.confirmPassword}</span>
+              <span className="text-sm text-red-500 mt-1">{errors.confirmPassword}</span>
             )}
           </div>
 
           {/* General Error */}
           {error && (
-            <div style={styles.errorBox}>
-              <span style={styles.errorText}>{error}</span>
+            <div className="p-3 bg-red-50 rounded-lg border border-red-500">
+              <span className="text-sm text-red-500">{error}</span>
             </div>
           )}
 
@@ -329,201 +309,26 @@ export default function RegistrationForm() {
           <button
             type="submit"
             disabled={isSubmitting}
-            style={{
-              ...styles.submitButton,
-              ...(isSubmitting ? styles.submitButtonDisabled : {}),
-            }}
+            className={`px-6 py-4 text-lg font-semibold rounded-lg transition-all mt-2 ${
+              isSubmitting
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
+            }`}
           >
             {isSubmitting ? "Registering..." : "Register"}
           </button>
 
           {/* Login Link */}
-          <div style={styles.loginLink}>
-            <p style={styles.loginText}>
+          <div className="text-center mt-4">
+            <p className="text-sm text-gray-600">
               Already have an account?{" "}
-              <a href="/login" style={styles.loginAnchor}>
+              <a href="/login" className="text-blue-600 font-medium hover:text-blue-700">
                 Login
               </a>
             </p>
           </div>
         </form>
       </div>
-
-      {/* Optional Right Side Graphic - Hidden on mobile */}
-      <div style={styles.graphic}>
-        <div style={styles.graphicContent}>
-          <div style={styles.graphicIcon}>📚</div>
-          <p style={styles.graphicText}>Join the largest book exhibition in Sri Lanka</p>
-        </div>
-      </div>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    minHeight: "100vh",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "2rem",
-    background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
-    marginTop: "80px", // Account for fixed navbar
-  },
-  formCard: {
-    backgroundColor: "white",
-    borderRadius: "16px",
-    padding: "3rem",
-    boxShadow: "0 10px 40px rgba(0, 0, 0, 0.1)",
-    maxWidth: "600px",
-    width: "100%",
-    zIndex: 1,
-  },
-  formHeader: {
-    textAlign: "center",
-    marginBottom: "2.5rem",
-  },
-  title: {
-    fontSize: "2.5rem",
-    fontWeight: "bold",
-    color: "#1a1a1a",
-    marginBottom: "0.5rem",
-  },
-  subtitle: {
-    fontSize: "1rem",
-    color: "#6b7280",
-    lineHeight: "1.6",
-  },
-  form: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "1.5rem",
-  },
-  formGroup: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "0.5rem",
-  },
-  label: {
-    fontSize: "0.95rem",
-    fontWeight: "500",
-    color: "#374151",
-  },
-  required: {
-    color: "#ef4444",
-  },
-  input: {
-    padding: "0.75rem 1rem",
-    fontSize: "1rem",
-    border: "1px solid #d1d5db",
-    borderRadius: "8px",
-    transition: "all 0.3s",
-    fontFamily: "inherit",
-  },
-  textarea: {
-    resize: "vertical",
-    minHeight: "80px",
-  },
-  inputError: {
-    borderColor: "#ef4444",
-    borderWidth: "2px",
-  },
-  errorText: {
-    fontSize: "0.875rem",
-    color: "#ef4444",
-    marginTop: "0.25rem",
-  },
-  errorBox: {
-    padding: "0.75rem",
-    backgroundColor: "#fee2e2",
-    borderRadius: "8px",
-    border: "1px solid #ef4444",
-  },
-  submitButton: {
-    padding: "1rem",
-    fontSize: "1.1rem",
-    fontWeight: "600",
-    backgroundColor: "#2563eb",
-    color: "white",
-    border: "none",
-    borderRadius: "8px",
-    cursor: "pointer",
-    transition: "all 0.3s",
-    marginTop: "0.5rem",
-  },
-  submitButtonDisabled: {
-    backgroundColor: "#9ca3af",
-    cursor: "not-allowed",
-  },
-  loginLink: {
-    textAlign: "center",
-    marginTop: "1rem",
-  },
-  loginText: {
-    fontSize: "0.95rem",
-    color: "#6b7280",
-  },
-  loginAnchor: {
-    color: "#2563eb",
-    textDecoration: "none",
-    fontWeight: "500",
-  },
-  graphic: {
-    display: "none",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "2rem",
-    maxWidth: "400px",
-  },
-  graphicContent: {
-    textAlign: "center",
-  },
-  graphicIcon: {
-    fontSize: "6rem",
-    marginBottom: "1rem",
-  },
-  graphicText: {
-    fontSize: "1.2rem",
-    color: "#4b5563",
-    fontWeight: "500",
-  },
-  successContainer: {
-    minHeight: "100vh",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "2rem",
-    background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
-    marginTop: "80px",
-  },
-  successCard: {
-    backgroundColor: "white",
-    borderRadius: "16px",
-    padding: "3rem",
-    boxShadow: "0 10px 40px rgba(0, 0, 0, 0.1)",
-    maxWidth: "500px",
-    width: "100%",
-    textAlign: "center",
-  },
-  successIcon: {
-    fontSize: "4rem",
-    marginBottom: "1rem",
-  },
-  successTitle: {
-    fontSize: "2rem",
-    fontWeight: "bold",
-    color: "#1a1a1a",
-    marginBottom: "1rem",
-  },
-  successText: {
-    fontSize: "1.1rem",
-    color: "#4b5563",
-    marginBottom: "0.5rem",
-  },
-  successSubtext: {
-    fontSize: "0.95rem",
-    color: "#9ca3af",
-    marginTop: "1rem",
-  },
-};
-
