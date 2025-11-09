@@ -1,4 +1,3 @@
-import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
 import About from "../components/About";
 import HowItWorks from "../components/HowItWorks";
@@ -11,7 +10,6 @@ export default function Home() {
 
   return (
     <div className="m-0 p-0 font-sans overflow-x-hidden">
-      <Navbar />
       <Hero />
       <About />
       <HowItWorks />

@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
+import { useAuth } from "../context/AuthContext";
 
 export default function LoginForm() {
   const router = useRouter();
+  const { login } = useAuth();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,9 +42,8 @@ export default function LoginForm() {
         throw new Error(data.error || "Login failed. Please check credentials.");
       }
 
-      // Save user and token to localStorage
-      localStorage.setItem("user", JSON.stringify(data.user));
-      localStorage.setItem("token", data.token);
+      // Use the login function from AuthContext
+      login(data.user, data.token);
 
       // Success - redirect to home
       router.push("/home");
