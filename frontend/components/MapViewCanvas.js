@@ -483,43 +483,60 @@ export default function MapViewCanvas({ halls, stalls, selectedStalls, onStallCl
         </Stage>
       </div>
 
-      {/* Zoom controls */}
+      {/* Enhanced Zoom controls */}
       <div className="absolute bottom-4 right-4 flex flex-col space-y-2 z-10">
-        <div className="bg-white border border-gray-300 rounded shadow p-2 mb-2">
-          <div className="text-xs text-gray-600 text-center mb-1">
+        {/* Zoom Level Indicator */}
+        <div className="bg-white border-2 border-gray-300 rounded-lg shadow-lg p-3 mb-2 backdrop-blur-sm bg-white/95">
+          <div className="text-xs text-gray-500 text-center mb-1 font-medium">Zoom Level</div>
+          <div className="text-lg font-bold text-blue-600 text-center">
             {Math.round(scale * 100)}%
           </div>
         </div>
+        
+        {/* Zoom In */}
         <button
           onClick={() => {
             const newScale = Math.min(5, scale + 0.1);
             setScale(newScale);
           }}
-          className="px-3 py-1 bg-white border border-gray-300 rounded shadow hover:bg-gray-50 transition-colors"
-          title="Zoom In"
+          className="px-4 py-2 bg-white border-2 border-gray-300 rounded-lg shadow-md hover:bg-blue-50 hover:border-blue-500 transition-all transform hover:scale-105 active:scale-95"
+          title="Zoom In (Scroll up)"
         >
-          +
+          <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+          </svg>
         </button>
+        
+        {/* Zoom Out */}
         <button
           onClick={() => {
             const newScale = Math.max(0.1, scale - 0.1);
             setScale(newScale);
           }}
-          className="px-3 py-1 bg-white border border-gray-300 rounded shadow hover:bg-gray-50 transition-colors"
-          title="Zoom Out"
+          className="px-4 py-2 bg-white border-2 border-gray-300 rounded-lg shadow-md hover:bg-blue-50 hover:border-blue-500 transition-all transform hover:scale-105 active:scale-95"
+          title="Zoom Out (Scroll down)"
         >
-          −
+          <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
+          </svg>
         </button>
+        
+        {/* Reset View */}
         <button
           onClick={() => {
             setScale(1);
             setPosition({ x: 0, y: 0 });
           }}
-          className="px-3 py-1 bg-white border border-gray-300 rounded shadow text-xs hover:bg-gray-50 transition-colors"
-          title="Reset View"
+          className="px-4 py-2 bg-white border-2 border-gray-300 rounded-lg shadow-md hover:bg-gray-50 hover:border-gray-400 transition-all transform hover:scale-105 active:scale-95 text-xs font-medium text-gray-700"
+          title="Reset to Default View"
         >
+          <svg className="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
           Reset
         </button>
+        
+        {/* Fit to Content */}
         <button
           onClick={() => {
             // Fit to content
@@ -542,10 +559,13 @@ export default function MapViewCanvas({ halls, stalls, selectedStalls, onStallCl
               }
             }
           }}
-          className="px-3 py-1 bg-white border border-gray-300 rounded shadow text-xs hover:bg-gray-50 transition-colors"
-          title="Fit to Content"
+          className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white border-2 border-blue-600 rounded-lg shadow-md hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 active:scale-95 text-xs font-semibold"
+          title="Fit All Stalls in View"
         >
-          Fit
+          <svg className="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z" />
+          </svg>
+          Fit View
         </button>
       </div>
 
