@@ -156,8 +156,10 @@ public class ReservationController {
         for (Reservation r : reservations) {
             Map<String, Object> res = new HashMap<>();
             res.put("id", r.getId());
+            res.put("stallId", r.getStall().getId());
             res.put("stallName", r.getStall().getName());
             res.put("stallSize", r.getStall().getSize());
+            res.put("stallGenres", r.getStall().getGenres() != null ? r.getStall().getGenres() : "");
             res.put("createdAt", r.getCreatedAt());
             res.put("qrCodeFilename", r.getQrCodeFilename());
             result.add(res);
