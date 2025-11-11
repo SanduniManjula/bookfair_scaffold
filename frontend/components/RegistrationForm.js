@@ -134,7 +134,7 @@ export default function RegistrationForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-8 mt-20 bg-gradient-to-br from-gray-50 via-blue-100 to-gray-200">
+    <div className="min-h-screen flex items-center justify-center p-8 bg-gradient-to-br from-gray-50 via-blue-100 to-gray-200">
       <div className="bg-white rounded-2xl p-8 md:p-12 shadow-2xl max-w-2xl w-full z-10">
         <div className="text-center mb-10">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">Create Your Account</h1>

@@ -56,7 +56,7 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-8 mt-20 bg-gradient-to-br from-gray-50 via-blue-100 to-gray-200">
+    <div className="min-h-screen flex items-center justify-center p-8 bg-gradient-to-br from-gray-50 via-blue-100 to-gray-200">
       <div className="bg-white rounded-2xl p-8 md:p-12 shadow-2xl max-w-md w-full">
         <div className="text-center mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
