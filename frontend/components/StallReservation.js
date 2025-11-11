@@ -281,6 +281,7 @@ export default function StallReservation() {
       const token = localStorage.getItem('token');
       let successCount = 0;
       let errorMessages = [];
+      const reservedStallIds = [];
       
       for (const stall of selectedStalls) {
         try {
@@ -296,6 +297,7 @@ export default function StallReservation() {
           const data = await res.json();
           if (res.ok) {
             successCount++;
+            reservedStallIds.push(stall.id);
           } else {
             errorMessages.push(`${stall.name}: ${data.error || 'Failed'}`);
           }
@@ -305,16 +307,18 @@ export default function StallReservation() {
       }
       
       if (successCount > 0) {
-        setMessage(`✅ Reservation confirmed! A confirmation email has been sent with your QR code.`);
+        setMessage(`Reservation confirmed! A confirmation email has been sent with your QR code.`);
         setMessageType('success');
         setSelectedStalls([]);
         setShowConfirmModal(false);
+        
+        // Redirect to add genres page after 2 seconds with reserved stall IDs
         setTimeout(() => {
-          loadStalls();
-          loadUserReservations();
-          setMessage('');
-          setMessageType('');
-        }, 5000);
+          router.push({
+            pathname: '/add-genres',
+            query: { stallIds: reservedStallIds.join(',') }
+          });
+        }, 2000);
       } else {
         setMessage(`Failed to reserve stalls: ${errorMessages.join(', ')}`);
         setMessageType('error');
