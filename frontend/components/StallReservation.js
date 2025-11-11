@@ -465,21 +465,6 @@ export default function StallReservation() {
 
           {/* Status Indicator */}
           <div className="mt-4 flex items-center space-x-4">
-            {useSavedMap ? (
-              <div className="flex items-center space-x-2 text-green-600 bg-green-50 px-4 py-2 rounded-lg border border-green-200">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="font-medium">Using saved map layout</span>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-2 text-gray-500 bg-gray-50 px-4 py-2 rounded-lg border border-gray-200">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span className="font-medium">Using default map view</span>
-              </div>
-            )}
             {sizeFilter !== 'All' && (
               <div className="text-sm text-gray-600 bg-blue-50 px-4 py-2 rounded-lg border border-blue-200">
                 Showing <span className="font-semibold text-blue-600">{filteredStalls.length}</span> {sizeFilter.toLowerCase()} stall(s)
@@ -523,12 +508,22 @@ export default function StallReservation() {
                   </svg>
                   <span>Interactive Map</span>
                 </h2>
-                {isLoadingStalls && (
-                  <div className="flex items-center space-x-2 text-blue-600">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-                    <span className="text-sm font-medium">Loading stalls...</span>
-                  </div>
-                )}
+                <div className="flex items-center space-x-3">
+                  {useSavedMap && (
+                    <div className="flex items-center space-x-2 text-green-600 bg-green-50 px-4 py-2 rounded-lg border border-green-200">
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      <span className="font-medium">Using saved map layout</span>
+                    </div>
+                  )}
+                  {isLoadingStalls && (
+                    <div className="flex items-center space-x-2 text-blue-600">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                      <span className="text-sm font-medium">Loading stalls...</span>
+                    </div>
+                  )}
+                </div>
               </div>
               
               {/* Legend */}
@@ -556,7 +551,7 @@ export default function StallReservation() {
                   </div>
                 </div>
                 <div className="mt-3 text-xs text-gray-500">
-                  💡 Click on stalls to select them. Use mouse wheel to zoom, Shift + drag to pan.
+                  Click on stalls to select them. Use mouse wheel to zoom, Shift + drag to pan.
                 </div>
               </div>
 

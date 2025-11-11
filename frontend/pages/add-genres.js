@@ -80,11 +80,16 @@ export default function AddGenres() {
         );
         setStalls(reservedStalls);
         
-        // Initialize stallGenres state
+        // Initialize stallGenres state with existing genres
         const initialGenres = {};
         reservedStalls.forEach(stall => {
+          // Pre-fill with existing genres if available
+          const existingGenres = stall.genres 
+            ? stall.genres.split(',').map(g => g.trim()).filter(g => g)
+            : [];
+          
           initialGenres[stall.id] = {
-            selectedGenres: [],
+            selectedGenres: existingGenres,
             customGenre: ''
           };
         });
@@ -185,7 +190,7 @@ export default function AddGenres() {
       });
 
       if (res.ok) {
-        setMessage('Genres saved successfully!');
+        setMessage(`Genres ${isEditMode ? 'updated' : 'saved'} successfully!`);
         setMessageType('success');
         
         // Redirect to home page after 2 seconds
@@ -240,13 +245,16 @@ export default function AddGenres() {
     );
   }
 
+  // Check if any stall has existing genres (edit mode)
+  const isEditMode = stalls.some(stall => stall.genres && stall.genres.trim());
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-10">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Add Genres to Your Stalls
+            {isEditMode ? 'Edit Genres for Your Stalls' : 'Add Genres to Your Stalls'}
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Select or add genres for each stall to help visitors discover the books you'll be showcasing

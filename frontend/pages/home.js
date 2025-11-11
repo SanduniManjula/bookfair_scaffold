@@ -219,13 +219,26 @@ export default function Home() {
                           </svg>
                           Stall {reservation.stallName}
                         </h3>
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          reservation.stallSize === 'SMALL' ? 'bg-yellow-100 text-yellow-800' :
-                          reservation.stallSize === 'MEDIUM' ? 'bg-orange-100 text-orange-800' :
-                          'bg-green-100 text-green-800'
-                        }`}>
-                          {reservation.stallSize}
-                        </span>
+                        <div className="flex items-center space-x-2">
+                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                            reservation.stallSize === 'SMALL' ? 'bg-yellow-100 text-yellow-800' :
+                            reservation.stallSize === 'MEDIUM' ? 'bg-orange-100 text-orange-800' :
+                            'bg-green-100 text-green-800'
+                          }`}>
+                            {reservation.stallSize}
+                          </span>
+                          {stallGenres.length > 0 && (
+                            <button
+                              onClick={() => router.push({ pathname: '/add-genres', query: { stallIds: reservation.stallId.toString() } })}
+                              className="p-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-100 rounded-lg transition-colors"
+                              title="Edit Genres"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
                       </div>
 
                       {stallGenres.length > 0 ? (
