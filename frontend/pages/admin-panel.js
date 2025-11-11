@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import adminApi from '../lib/api/admin';
 
 export default function AdminPanel() {
   const router = useRouter();
@@ -36,34 +37,16 @@ export default function AdminPanel() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      // Load stats, users, and reservations in parallel
+      const [statsData, usersData, resData] = await Promise.all([
+        adminApi.getStats().catch(() => null),
+        adminApi.getUsers().catch(() => ({ users: [] })),
+        adminApi.getReservations().catch(() => ({ reservations: [] }))
+      ]);
       
-      // Load stats
-      const statsRes = await fetch('http://localhost:8081/api/admin/stats', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (statsRes.ok) {
-        const statsData = await statsRes.json();
-        setStats(statsData);
-      }
-      
-      // Load users
-      const usersRes = await fetch('http://localhost:8081/api/admin/users', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (usersRes.ok) {
-        const usersData = await usersRes.json();
-        setUsers(usersData.users || []);
-      }
-      
-      // Load reservations
-      const resRes = await fetch('http://localhost:8081/api/admin/reservations', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (resRes.ok) {
-        const resData = await resRes.json();
-        setReservations(resData.reservations || []);
-      }
+      if (statsData) setStats(statsData);
+      setUsers(usersData.users || []);
+      setReservations(resData.reservations || []);
       
     } catch (err) {
       console.error('Failed to load data:', err);
@@ -75,27 +58,12 @@ export default function AdminPanel() {
 
   const handleUpdateRole = async (userId, newRole) => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:8081/api/admin/users/${userId}/role`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ role: newRole })
-      });
-      
-      const data = await res.json();
-      if (res.ok) {
-        setMessage('User role updated successfully!');
-        loadData();
-        setTimeout(() => setMessage(''), 3000);
-      } else {
-        setMessage(data.error || 'Failed to update role');
-        setTimeout(() => setMessage(''), 3000);
-      }
+      await adminApi.updateUserRole(userId, newRole);
+      setMessage('User role updated successfully!');
+      loadData();
+      setTimeout(() => setMessage(''), 3000);
     } catch (err) {
-      setMessage('Failed to update user role.');
+      setMessage(err.message || 'Failed to update user role.');
       setTimeout(() => setMessage(''), 3000);
     }
   };
@@ -106,23 +74,12 @@ export default function AdminPanel() {
     }
     
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:8081/api/admin/users/${userId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      const data = await res.json();
-      if (res.ok) {
-        setMessage('User deleted successfully!');
-        loadData();
-        setTimeout(() => setMessage(''), 3000);
-      } else {
-        setMessage(data.error || 'Failed to delete user');
-        setTimeout(() => setMessage(''), 3000);
-      }
+      await adminApi.deleteUser(userId);
+      setMessage('User deleted successfully!');
+      loadData();
+      setTimeout(() => setMessage(''), 3000);
     } catch (err) {
-      setMessage('Failed to delete user.');
+      setMessage(err.message || 'Failed to delete user.');
       setTimeout(() => setMessage(''), 3000);
     }
   };
@@ -133,23 +90,12 @@ export default function AdminPanel() {
     }
     
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:8081/api/admin/reservations/${reservationId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      const data = await res.json();
-      if (res.ok) {
-        setMessage('Reservation deleted successfully!');
-        loadData();
-        setTimeout(() => setMessage(''), 3000);
-      } else {
-        setMessage(data.error || 'Failed to delete reservation');
-        setTimeout(() => setMessage(''), 3000);
-      }
+      await adminApi.deleteReservation(reservationId);
+      setMessage('Reservation deleted successfully!');
+      loadData();
+      setTimeout(() => setMessage(''), 3000);
     } catch (err) {
-      setMessage('Failed to delete reservation.');
+      setMessage(err.message || 'Failed to delete reservation.');
       setTimeout(() => setMessage(''), 3000);
     }
   };

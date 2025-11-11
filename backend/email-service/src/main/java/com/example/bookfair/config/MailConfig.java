@@ -1,5 +1,7 @@
 package com.example.bookfair.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,6 +13,8 @@ import java.util.Properties;
 
 @Configuration
 public class MailConfig {
+    
+    private static final Logger logger = LoggerFactory.getLogger(MailConfig.class);
 
     @Value("${spring.mail.host:smtp.gmail.com}")
     private String host;
@@ -62,11 +66,13 @@ public class MailConfig {
     
     // No-op implementation for when mail is not configured
     private static class NoOpJavaMailSender extends JavaMailSenderImpl {
+        private static final Logger logger = LoggerFactory.getLogger(NoOpJavaMailSender.class);
+        
         @Override
         public void send(org.springframework.mail.SimpleMailMessage simpleMessage) {
-            System.out.println("Email service not configured - email would be sent to: " + 
-                (simpleMessage != null && simpleMessage.getTo() != null && simpleMessage.getTo().length > 0 
-                    ? simpleMessage.getTo()[0] : "unknown"));
+            String recipient = simpleMessage != null && simpleMessage.getTo() != null && simpleMessage.getTo().length > 0 
+                ? simpleMessage.getTo()[0] : "unknown";
+            logger.info("Email service not configured - email would be sent to: {}", recipient);
         }
         
         @Override
@@ -84,10 +90,9 @@ public class MailConfig {
                         .map(r -> r.toString())
                         .toArray(String[]::new)
                     : new String[]{"unknown"};
-                System.out.println("Email service not configured - email would be sent to: " + 
-                    String.join(", ", recipients));
+                logger.info("Email service not configured - email would be sent to: {}", String.join(", ", recipients));
             } catch (Exception e) {
-                System.out.println("Email service not configured - email sending skipped");
+                logger.warn("Email service not configured - email sending skipped: {}", e.getMessage());
             }
         }
         

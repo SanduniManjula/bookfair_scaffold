@@ -1,4 +1,5 @@
 /Users/sasandamanahara/Documents/GitHub/bookfair_scaffold/backend/email-service/src/main/java/com/example/bookfair/EmailServiceApplication.java
 /Users/sasandamanahara/Documents/GitHub/bookfair_scaffold/backend/email-service/src/main/java/com/example/bookfair/config/MailConfig.java
 /Users/sasandamanahara/Documents/GitHub/bookfair_scaffold/backend/email-service/src/main/java/com/example/bookfair/controller/EmailController.java
+/Users/sasandamanahara/Documents/GitHub/bookfair_scaffold/backend/email-service/src/main/java/com/example/bookfair/config/CorsConfig.java
 /Users/sasandamanahara/Documents/GitHub/bookfair_scaffold/backend/email-service/src/main/java/com/example/bookfair/service/EmailService.java

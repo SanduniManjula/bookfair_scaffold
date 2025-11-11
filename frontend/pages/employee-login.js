@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
+import employeeApi from "../lib/api/employee";
 
 export default function EmployeeLogin() {
   const router = useRouter();
@@ -14,22 +15,7 @@ export default function EmployeeLogin() {
     setError("");
 
     try {
-      const res = await fetch("http://localhost:8085/api/employee/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-
-      let data;
-      try {
-        data = await res.json();
-      } catch {
-        data = {};
-      }
-
-      if (!res.ok || data.error) {
-        throw new Error(data.error || "Login failed. Please check credentials.");
-      }
+      const data = await employeeApi.login(form);
 
       localStorage.setItem("employee", JSON.stringify(data.employee));
       localStorage.setItem("employeeToken", data.token);

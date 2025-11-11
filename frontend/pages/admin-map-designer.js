@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
+import adminApi from '../lib/api/admin';
 import ToolsSidebar from '../components/ToolsSidebar';
 import EditStallModal from '../components/EditStallModal';
 
@@ -50,29 +51,22 @@ export default function AdminMapDesigner() {
 
   const loadMapData = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:8081/api/admin/map-layout', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setMapData(data);
-        if (data.halls && data.halls.length > 0) {
-          // Ensure all halls have label positions
-          const hallsWithLabels = data.halls.map((hall, index) => ({
-            ...hall,
-            labelX: hall.labelX || 20 + (index * 200),
-            labelY: hall.labelY || 20 + (index * 30)
-          }));
-          setHalls(hallsWithLabels);
-          setSelectedHall(hallsWithLabels[0]); // Select first hall by default
-        }
+      const data = await adminApi.getMapLayout();
+      setMapData(data);
+      if (data.halls && data.halls.length > 0) {
+        // Ensure all halls have label positions
+        const hallsWithLabels = data.halls.map((hall, index) => ({
+          ...hall,
+          labelX: hall.labelX || 20 + (index * 200),
+          labelY: hall.labelY || 20 + (index * 30)
+        }));
+        setHalls(hallsWithLabels);
+        setSelectedHall(hallsWithLabels[0]); // Select first hall by default
       }
     } catch (err) {
-      console.error('Failed to load map data:', err);
+      if (err.status !== 404) {
+        console.error('Failed to load map data:', err);
+      }
     }
   };
 
@@ -116,43 +110,15 @@ export default function AdminMapDesigner() {
         return;
       }
 
-      const res = await fetch('http://localhost:8081/api/admin/map-layout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(mapData)
-      });
-
-      if (!res.ok) {
-        let errorData;
-        try {
-          errorData = await res.json();
-        } catch (e) {
-          errorData = { error: `HTTP ${res.status}: ${res.statusText}` };
-        }
-        const errorMsg = errorData.error || 'Failed to save map';
-        setMessage(`Error: ${errorMsg}`);
-        setTimeout(() => setMessage(''), 5000);
-        console.error('Failed to save map to database:', errorData);
-        setIsSaving(false);
-        return;
-      }
-
-      const data = await res.json();
-      console.log('Map saved successfully to database:', data);
-      const message = `Map saved successfully! ID: ${data.id || 'N/A'}, Halls: ${data.hallsCount || halls.length}, Stalls: ${data.totalStalls || halls.reduce((sum, h) => sum + (h.stalls?.length || 0), 0)}` +
-        (data.createdStalls !== undefined ? ` (Created: ${data.createdStalls}, Updated: ${data.updatedStalls || 0})` : '');
-      setMessage(message);
+      await adminApi.saveMapLayout(mapData);
+      
+      setMessage('Map saved successfully!');
       setTimeout(() => setMessage(''), 5000);
     } catch (err) {
       console.error('Failed to save map:', err);
       let errorMessage = 'Error saving map: ';
       if (err.message) {
         errorMessage += err.message;
-      } else if (err.name === 'TypeError' && err.message.includes('fetch')) {
-        errorMessage += 'Failed to connect to server. Please check if the backend is running on http://localhost:8081';
       } else {
         errorMessage += 'Unknown error occurred';
       }

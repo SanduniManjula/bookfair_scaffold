@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import adminApi from '../lib/api/admin';
 
 export default function AdminReservations() {
   const router = useRouter();
@@ -53,30 +54,18 @@ export default function AdminReservations() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      
-      const res = await fetch('http://localhost:8081/api/admin/reservations', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      if (res.ok) {
-        const data = await res.json();
-        const reservationsList = data.reservations || [];
-        // Infer status from qrCodeFilename: if exists = Confirmed, else = Pending
-        const reservationsWithStatus = reservationsList.map(r => ({
-          ...r,
-          status: r.qrCodeFilename ? 'Confirmed' : 'Pending'
-        }));
-        setReservations(reservationsWithStatus);
-        setFilteredReservations(reservationsWithStatus);
-      } else {
-        const errorData = await res.json();
-        setMessage(errorData.error || 'Failed to load reservations');
-        setMessageType('error');
-      }
+      const data = await adminApi.getReservations();
+      const reservationsList = data.reservations || [];
+      // Infer status from qrCodeFilename: if exists = Confirmed, else = Pending
+      const reservationsWithStatus = reservationsList.map(r => ({
+        ...r,
+        status: r.qrCodeFilename ? 'Confirmed' : 'Pending'
+      }));
+      setReservations(reservationsWithStatus);
+      setFilteredReservations(reservationsWithStatus);
     } catch (err) {
       console.error('Failed to load reservations:', err);
-      setMessage('Failed to load reservations. Please check if the backend is running.');
+      setMessage(err.message || 'Failed to load reservations. Please check if the backend is running.');
       setMessageType('error');
     } finally {
       setLoading(false);
@@ -85,20 +74,15 @@ export default function AdminReservations() {
 
   const loadMapLayout = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:8081/api/admin/map-layout', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      if (res.ok) {
-        const data = await res.json();
-        setMapLayout(data);
-        if (data.halls && data.halls.length > 0) {
-          setHalls(data.halls.map(h => h.name));
-        }
+      const data = await adminApi.getMapLayout();
+      setMapLayout(data);
+      if (data.halls && data.halls.length > 0) {
+        setHalls(data.halls.map(h => h.name));
       }
     } catch (err) {
-      console.error('Failed to load map layout:', err);
+      if (err.status !== 404) {
+        console.error('Failed to load map layout:', err);
+      }
     }
   };
 
@@ -241,26 +225,14 @@ export default function AdminReservations() {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:8081/api/admin/reservations/${reservationId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (res.ok) {
-        setMessage('Reservation cancelled successfully!');
-        setMessageType('success');
-        loadData();
-        setShowModal(false);
-        setTimeout(() => setMessage(''), 3000);
-      } else {
-        const errorData = await res.json();
-        setMessage(errorData.error || 'Failed to cancel reservation');
-        setMessageType('error');
-        setTimeout(() => setMessage(''), 3000);
-      }
+      await adminApi.deleteReservation(reservationId);
+      setMessage('Reservation cancelled successfully!');
+      setMessageType('success');
+      loadData();
+      setShowModal(false);
+      setTimeout(() => setMessage(''), 3000);
     } catch (err) {
-      setMessage('Failed to cancel reservation.');
+      setMessage(err.message || 'Failed to cancel reservation.');
       setMessageType('error');
       setTimeout(() => setMessage(''), 3000);
     }

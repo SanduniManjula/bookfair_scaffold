@@ -1,5 +1,7 @@
 package com.example.bookfair.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -12,6 +14,8 @@ import java.io.File;
 
 @Service
 public class EmailService {
+    
+    private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
     
     @Autowired(required = false)
     private JavaMailSender mailSender;
@@ -26,8 +30,7 @@ public class EmailService {
 
     public void sendWelcomeEmail(String email, String username) {
         if (mailSender == null || fromEmail == null || fromEmail.isEmpty()) {
-            System.out.println("Email service not configured. Would send welcome email to: " + email);
-            System.out.println("Subject: Welcome to Colombo International Bookfair");
+            logger.info("Email service not configured. Would send welcome email to: {}", email);
             return;
         }
 
@@ -43,18 +46,17 @@ public class EmailService {
             helper.setText(htmlContent, true);
 
             mailSender.send(message);
-            System.out.println("Welcome email sent to: " + email);
+            logger.info("Welcome email sent successfully to: {}", email);
         } catch (MessagingException e) {
-            System.err.println("Failed to send welcome email: " + e.getMessage());
+            logger.error("Failed to send welcome email to {}: {}", email, e.getMessage(), e);
             throw new RuntimeException("Failed to send welcome email", e);
         }
     }
 
     public void sendReservationRequestEmail(String email, String username, String stallName, String stallSize, Long reservationId, String createdAt) {
         if (mailSender == null || fromEmail == null || fromEmail.isEmpty()) {
-            System.out.println("Email service not configured. Would send reservation request email to: " + email);
-            System.out.println("Subject: Reservation Request Received - Colombo International Bookfair");
-            System.out.println("Stall: " + stallName + " (" + stallSize + ")");
+            logger.info("Email service not configured. Would send reservation request email to: {} for stall: {} ({})", 
+                    email, stallName, stallSize);
             return;
         }
 
@@ -70,19 +72,18 @@ public class EmailService {
             helper.setText(htmlContent, true);
 
             mailSender.send(message);
-            System.out.println("Reservation request email sent to: " + email);
+            logger.info("Reservation request email sent successfully to: {} for reservation ID: {}", email, reservationId);
         } catch (MessagingException e) {
-            System.err.println("Failed to send reservation request email: " + e.getMessage());
+            logger.error("Failed to send reservation request email to {} for reservation ID {}: {}", 
+                    email, reservationId, e.getMessage(), e);
             throw new RuntimeException("Failed to send reservation request email", e);
         }
     }
 
     public void sendReservationConfirmation(String email, String username, String stallName, String stallSize, Long reservationId, String createdAt, String qrCodePath) {
         if (mailSender == null || fromEmail == null || fromEmail.isEmpty()) {
-            System.out.println("Email service not configured. Would send confirmation email to: " + email);
-            System.out.println("Subject: Reservation Confirmation - Colombo International Bookfair");
-            System.out.println("Stall: " + stallName + " (" + stallSize + ")");
-            System.out.println("QR Code: " + qrCodePath);
+            logger.info("Email service not configured. Would send confirmation email to: {} for stall: {} ({}) with QR: {}", 
+                    email, stallName, stallSize, qrCodePath);
             return;
         }
 
@@ -102,13 +103,17 @@ public class EmailService {
                 File qrFile = new File(qrCodePath);
                 if (qrFile.exists()) {
                     helper.addAttachment("qr-code.png", qrFile);
+                    logger.debug("QR code attached to confirmation email: {}", qrCodePath);
+                } else {
+                    logger.warn("QR code file not found: {}", qrCodePath);
                 }
             }
 
             mailSender.send(message);
-            System.out.println("Confirmation email sent to: " + email);
+            logger.info("Confirmation email sent successfully to: {} for reservation ID: {}", email, reservationId);
         } catch (MessagingException e) {
-            System.err.println("Failed to send confirmation email: " + e.getMessage());
+            logger.error("Failed to send confirmation email to {} for reservation ID {}: {}", 
+                    email, reservationId, e.getMessage(), e);
             throw new RuntimeException("Failed to send confirmation email", e);
         }
     }

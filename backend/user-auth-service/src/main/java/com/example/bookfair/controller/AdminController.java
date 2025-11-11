@@ -8,6 +8,8 @@ import com.example.bookfair.user.repository.UserRepository;
 import com.example.bookfair.user.repository.StallRepository;
 import com.example.bookfair.user.repository.MapLayoutRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,8 +23,9 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin")
-@CrossOrigin(origins = "http://localhost:3000")
 public class AdminController {
+
+    private static final Logger logger = LoggerFactory.getLogger(AdminController.class);
 
     @Autowired
     private UserRepository userRepository;
@@ -236,8 +239,9 @@ public class AdminController {
 
         try {
             MapLayout layout = layoutOpt.get();
-            System.out.println("Loading map layout. ID: " + layout.getId());
-            System.out.println("Layout data length: " + (layout.getLayoutData() != null ? layout.getLayoutData().length() : 0));
+            logger.debug("Loading map layout. ID: {}, Data length: {}", 
+                    layout.getId(), 
+                    layout.getLayoutData() != null ? layout.getLayoutData().length() : 0);
             
             Map<String, Object> layoutData = objectMapper.readValue(
                 layout.getLayoutData(),
@@ -247,7 +251,6 @@ public class AdminController {
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> halls = (List<Map<String, Object>>) layoutData.get("halls");
             if (halls != null) {
-                System.out.println("Loaded map layout with " + halls.size() + " halls");
                 int totalStalls = halls.stream()
                     .mapToInt(hall -> {
                         Object stallsObj = hall.get("stalls");
@@ -257,13 +260,12 @@ public class AdminController {
                         return 0;
                     })
                     .sum();
-                System.out.println("Total stalls: " + totalStalls);
+                logger.info("Loaded map layout with {} halls and {} total stalls", halls.size(), totalStalls);
             }
             
             return ResponseEntity.ok(layoutData);
         } catch (Exception e) {
-            System.err.println("Failed to parse map layout: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Failed to parse map layout: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to parse map layout: " + e.getMessage()));
         }
@@ -324,7 +326,7 @@ public class AdminController {
                                 stallId = (String) stallData.get("id");
                             }
                             if (stallId == null || stallId.isEmpty()) {
-                                System.out.println("Warning: Skipping stall without ID: " + stallData);
+                                logger.warn("Skipping stall without ID: {}", stallData);
                                 continue; // Skip stalls without ID
                             }
                             
@@ -376,15 +378,14 @@ public class AdminController {
                             stallRepository.save(stall);
                         } catch (Exception e) {
                             errorStalls++;
-                            System.err.println("Error saving stall: " + stallData + " - " + e.getMessage());
-                            e.printStackTrace();
+                            logger.error("Error saving stall: {} - {}", stallData, e.getMessage(), e);
                         }
                     }
                 }
             }
             
             if (errorStalls > 0) {
-                System.err.println("Warning: " + errorStalls + " stalls failed to save");
+                logger.warn("{} stalls failed to save", errorStalls);
             }
             
             // Convert to JSON string
@@ -400,7 +401,7 @@ public class AdminController {
             // Verify it was saved by reading it back
             Optional<MapLayout> verifyLayout = mapLayoutRepository.findById(savedLayout.getId());
             if (verifyLayout.isEmpty()) {
-                System.err.println("WARNING: Map layout was not saved to database!");
+                logger.error("Map layout was not saved to database! ID: {}", savedLayout.getId());
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(Map.of("error", "Failed to save map layout to database"));
             }
@@ -415,17 +416,8 @@ public class AdminController {
                 })
                 .sum();
             
-            System.out.println("✓ Map layout saved successfully to database!");
-            System.out.println("  - ID: " + savedLayout.getId());
-            System.out.println("  - Total halls: " + halls.size());
-            System.out.println("  - Total stalls: " + totalStalls);
-            System.out.println("  - Created stalls: " + createdStalls);
-            System.out.println("  - Updated stalls: " + updatedStalls);
-            if (errorStalls > 0) {
-                System.out.println("  - Error stalls: " + errorStalls);
-            }
-            System.out.println("  - Data size: " + layoutJson.length() + " characters");
-            System.out.println("  - Created at: " + savedLayout.getCreatedAt());
+            logger.info("Map layout saved successfully - ID: {}, Halls: {}, Total stalls: {}, Created: {}, Updated: {}, Errors: {}, Data size: {} chars", 
+                    savedLayout.getId(), halls.size(), totalStalls, createdStalls, updatedStalls, errorStalls, layoutJson.length());
 
             Map<String, Object> response = new HashMap<>();
             response.put("message", "Map layout saved successfully");
@@ -441,8 +433,7 @@ public class AdminController {
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            System.err.println("Failed to save map layout: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Failed to save map layout: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to save map layout: " + e.getMessage()));
         }
@@ -548,6 +539,7 @@ public class AdminController {
             long existingCount = stallRepository.count();
             stallRepository.deleteAll();
             
+            logger.info("Deleted all stalls and reservations - Stalls: {}, Reservations: {}", existingCount, reservationCount);
             return ResponseEntity.ok(Map.of(
                 "message", "All stalls and reservations deleted successfully",
                 "deletedStalls", existingCount,
@@ -555,8 +547,7 @@ public class AdminController {
                 "note", "Stalls will be created automatically when you save a map layout."
             ));
         } catch (Exception e) {
-            System.err.println("Failed to delete stalls: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Failed to delete stalls: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to delete stalls: " + e.getMessage()));
         }

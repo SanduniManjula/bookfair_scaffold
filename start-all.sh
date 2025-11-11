@@ -154,6 +154,7 @@ print_message "Starting all Bookfair services..."
 echo ""
 
 # Start backend services
+start_backend_service "api-gateway" 8080
 start_backend_service "user-auth-service" 8081
 start_backend_service "reservation-service" 8082
 start_backend_service "email-service" 8083
@@ -169,6 +170,7 @@ echo ""
 print_message "All services started successfully!"
 echo ""
 print_message "Service URLs:"
+print_service "  - API Gateway:          http://localhost:8080"
 print_service "  - User Auth Service:    http://localhost:8081"
 print_service "  - Reservation Service:  http://localhost:8082"
 print_service "  - Email Service:        http://localhost:8083"

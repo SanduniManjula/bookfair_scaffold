@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
+import userApi from "../lib/api/user";
+import reservationsApi from "../lib/api/reservations";
 
 export default function Home() {
   const router = useRouter();
@@ -28,24 +30,15 @@ export default function Home() {
   const fetchUserProfile = async () => {
     try {
       setIsLoading(true);
-      const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:8081/api/user/profile", {
-        headers: {
-          "Authorization": `Bearer ${token}`
-        },
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.genres) {
-          setGenres(data.genres);
-        }
-        // Update user data with latest from server
-        setUser(prevUser => ({
-          ...prevUser,
-          ...data
-        }));
+      const data = await userApi.getProfile();
+      if (data.genres) {
+        setGenres(data.genres);
       }
+      // Update user data with latest from server
+      setUser(prevUser => ({
+        ...prevUser,
+        ...data
+      }));
     } catch (err) {
       console.error("Failed to fetch profile:", err);
     } finally {
@@ -56,16 +49,8 @@ export default function Home() {
   // Fetch user reservations count
   const fetchUserReservations = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:8081/api/reservations/my-reservations", {
-        headers: {
-          "Authorization": `Bearer ${token}`
-        },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setUserReservations(data.length || 0);
-      }
+      const data = await reservationsApi.getMyReservations();
+      setUserReservations(data.length || 0);
     } catch (err) {
       console.error("Failed to fetch reservations:", err);
     }
@@ -79,34 +64,16 @@ export default function Home() {
     setIsSaving(true);
 
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:8081/api/user/genres", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          email: user.email,
-          genres: genres
-        }),
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        setMessage("Genres updated successfully! 🎉");
-        setMessageType("success");
-        // Clear message after 5 seconds
-        setTimeout(() => {
-          setMessage("");
-          setMessageType("");
-        }, 5000);
-      } else {
-        setMessage(data.error || "Error saving genres.");
-        setMessageType("error");
-      }
+      await userApi.updateGenres(user.email, genres);
+      setMessage("Genres updated successfully! 🎉");
+      setMessageType("success");
+      // Clear message after 5 seconds
+      setTimeout(() => {
+        setMessage("");
+        setMessageType("");
+      }, 5000);
     } catch (err) {
-      setMessage("Failed to connect to backend. Please try again.");
+      setMessage(err.message || "Failed to connect to backend. Please try again.");
       setMessageType("error");
     } finally {
       setIsSaving(false);

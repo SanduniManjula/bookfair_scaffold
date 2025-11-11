@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
+import employeeApi from "../lib/api/employee";
 
 export default function EmployeeDashboard() {
   const router = useRouter();
@@ -22,17 +23,8 @@ export default function EmployeeDashboard() {
 
   const loadStalls = async () => {
     try {
-      const token = localStorage.getItem("employeeToken");
-      const res = await fetch("http://localhost:8085/api/employee/dashboard/stalls", {
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setStalls(data);
-      }
+      const data = await employeeApi.getStalls();
+      setStalls(data);
     } catch (err) {
       console.error("Failed to load stalls:", err);
     } finally {

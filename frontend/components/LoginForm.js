@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 import { useAuth } from "../context/AuthContext";
+import authApi from "../lib/api/auth";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -23,24 +24,7 @@ export default function LoginForm() {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch("http://localhost:8081/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-
-      // Try parsing JSON safely
-      let data;
-      try {
-        data = await res.json();
-      } catch {
-        data = {};
-      }
-
-      // Handle errors
-      if (!res.ok || data.error) {
-        throw new Error(data.error || "Login failed. Please check credentials.");
-      }
+      const data = await authApi.login(form);
 
       // Use the login function from AuthContext
       login(data.user, data.token);

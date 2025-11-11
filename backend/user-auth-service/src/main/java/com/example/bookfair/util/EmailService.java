@@ -3,6 +3,8 @@ package com.example.bookfair.util;
 import com.example.bookfair.user.model.Reservation;
 import com.example.bookfair.user.model.Stall;
 import com.example.bookfair.user.model.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -13,6 +15,8 @@ import java.util.Map;
 
 @Service
 public class EmailService {
+    
+    private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
     
     @Autowired(required = false)
     private RestTemplate restTemplate;
@@ -43,9 +47,10 @@ public class EmailService {
                     request,
                     Map.class
             );
-            System.out.println("Confirmation email request sent to email service for: " + user.getEmail());
+            logger.info("Confirmation email request sent to email service for: {}", user.getEmail());
         } catch (Exception e) {
-            System.err.println("Failed to send confirmation email via email service: " + e.getMessage());
+            logger.warn("Failed to send confirmation email via email service for {}: {}", 
+                    user.getEmail(), e.getMessage());
             // Don't throw exception - reservation should succeed even if email fails
         }
     }
@@ -62,9 +67,10 @@ public class EmailService {
                     request,
                     Map.class
             );
-            System.out.println("Welcome email request sent to email service for: " + user.getEmail());
+            logger.info("Welcome email request sent to email service for: {}", user.getEmail());
         } catch (Exception e) {
-            System.err.println("Failed to send welcome email via email service: " + e.getMessage());
+            logger.warn("Failed to send welcome email via email service for {}: {}", 
+                    user.getEmail(), e.getMessage());
             // Don't throw exception for welcome email - registration should succeed even if email fails
         }
     }
@@ -85,9 +91,10 @@ public class EmailService {
                     request,
                     Map.class
             );
-            System.out.println("Reservation request email sent to email service for: " + user.getEmail());
+            logger.info("Reservation request email sent to email service for: {}", user.getEmail());
         } catch (Exception e) {
-            System.err.println("Failed to send reservation request email via email service: " + e.getMessage());
+            logger.warn("Failed to send reservation request email via email service for {}: {}", 
+                    user.getEmail(), e.getMessage());
             // Don't throw exception - reservation should succeed even if email fails
         }
     }

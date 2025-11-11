@@ -1,54 +1,34 @@
 package com.example.bookfair.user.controller;
 
-import com.example.bookfair.user.model.User;
-import com.example.bookfair.user.repository.UserRepository;
+import com.example.bookfair.dto.UpdateGenresRequest;
+import com.example.bookfair.dto.UserResponse;
+import com.example.bookfair.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/user")
-@CrossOrigin(origins = "http://localhost:3000")
 public class UserController {
 
     @Autowired
-    private UserRepository userRepository;
+    private UserService userService;
 
     @GetMapping("/profile")
-    public Map<String, Object> getProfile(Authentication authentication) {
+    public ResponseEntity<UserResponse> getProfile(Authentication authentication) {
         String email = authentication.getName();
-        Optional<User> userOpt = userRepository.findByEmail(email);
-        
-        if (userOpt.isEmpty()) {
-            return Map.of("error", "User not found");
-        }
-
-        User user = userOpt.get();
-        return Map.of(
-                "id", user.getId(),
-                "email", user.getEmail(),
-                "username", user.getUsername(),
-                "role", user.getRole(),
-                "genres", user.getGenres() != null ? user.getGenres() : ""
-        );
+        UserResponse response = userService.getProfile(email);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/genres")
-    public Map<String, Object> updateGenres(@RequestBody Map<String, String> request, Authentication authentication) {
+    public ResponseEntity<Map<String, Object>> updateGenres(@Valid @RequestBody UpdateGenresRequest request, Authentication authentication) {
         String email = authentication.getName();
-        String genres = request.get("genres");
-
-        Optional<User> userOpt = userRepository.findByEmail(email);
-        if (userOpt.isEmpty()) {
-            return Map.of("error", "User not found");
-        }
-
-        User user = userOpt.get();
-        user.setGenres(genres);
-        userRepository.save(user);
-
-        return Map.of("message", "Genres updated");
+        userService.updateGenres(request, email);
+        return ResponseEntity.ok(Map.of("message", "Genres updated"));
     }
 }

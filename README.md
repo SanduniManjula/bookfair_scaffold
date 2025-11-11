@@ -65,6 +65,21 @@ npm run dev
 
 ## Requirements
 
-- Java 11+ and Maven for backend services
+- Java 17+ and Maven for backend services
 - Node.js and npm for frontend
 - MySQL database (see `backend/ENV_SETUP.md` for configuration)
+
+## Database Setup
+
+This project uses **database per service** pattern (true microservices):
+
+1. **Create databases:**
+   ```bash
+   mysql -u root -p < backend/setup-databases.sql
+   ```
+
+2. **Databases created:**
+   - `bookfair_user_db` - User Auth Service (users, reservations, stalls, map_layouts)
+   - `bookfair_employee_db` - Employee Service (employees)
+
+3. **See `backend/DATABASE_PER_SERVICE.md` for detailed documentation**

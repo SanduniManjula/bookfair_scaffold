@@ -1,5 +1,6 @@
 package com.example.bookfair.controller;
 
+import com.example.bookfair.config.ServiceConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -13,18 +14,18 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/api/employee/dashboard")
-@CrossOrigin(origins = "http://localhost:3000")
 public class DashboardController {
 
     @Autowired
     private RestTemplate restTemplate;
 
-    private static final String USER_SERVICE_URL = "http://localhost:8081";
+    @Autowired
+    private ServiceConfig serviceConfig;
 
     @GetMapping("/stalls")
     public ResponseEntity<?> getAllStalls(Authentication authentication) {
         try {
-            String url = USER_SERVICE_URL + "/api/reservations/all";
+            String url = serviceConfig.getUserServiceUrl() + "/api/reservations/all";
             ResponseEntity<Object[]> response = restTemplate.getForEntity(url, Object[].class);
             return ResponseEntity.ok(response.getBody());
         } catch (Exception e) {

@@ -8,10 +8,16 @@ import java.time.*;
 public class Reservation {
     @Id @GeneratedValue(strategy=GenerationType.IDENTITY)
     private Long id;
+    
+    // Store user reference - using @ManyToOne since User is in same service
+    // For true microservices, we could store userId only and fetch via API
     @ManyToOne
     private User user;
+    
+    // Store stall reference - using @ManyToOne since Stall is in same service
     @ManyToOne
     private Stall stall;
+    
     private LocalDateTime createdAt = LocalDateTime.now();
     private String qrCodeFilename;
 

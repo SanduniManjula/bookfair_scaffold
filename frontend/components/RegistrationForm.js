@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
+import authApi from "../lib/api/auth";
 
 export default function RegistrationForm() {
   const router = useRouter();
@@ -90,17 +91,7 @@ export default function RegistrationForm() {
         genres: JSON.stringify(additionalInfo), // Store contactPerson, phone, address as JSON in genres field
       };
 
-      const res = await fetch("http://localhost:8081/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(registrationData),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || data.error) {
-        throw new Error(data.error || "Registration failed");
-      }
+      const data = await authApi.register(registrationData);
 
       // Show success message
       setSuccess(true);

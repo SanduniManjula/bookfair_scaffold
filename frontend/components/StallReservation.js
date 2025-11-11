@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
+import reservationsApi from '../lib/api/reservations';
 
 // Dynamically import MapViewCanvas to avoid SSR issues with react-konva
 const MapViewCanvas = dynamic(() => import('./MapViewCanvas'), {
@@ -18,7 +19,6 @@ export default function StallReservation() {
   const [user, setUser] = useState(null);
   const [userReservations, setUserReservations] = useState(0);
   const [hoveredStallId, setHoveredStallId] = useState(null);
-  const svgRef = useRef(null);
   const [debugInfo, setDebugInfo] = useState('');
   const [mapLayout, setMapLayout] = useState(null);
   const [useSavedMap, setUseSavedMap] = useState(false);
@@ -56,16 +56,8 @@ export default function StallReservation() {
 
   const loadUserReservations = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:8081/api/reservations/my-reservations', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setUserReservations(data.length || 0);
-      }
+      const data = await reservationsApi.getMyReservations();
+      setUserReservations(data.length || 0);
     } catch (err) {
       console.error('Failed to load user reservations:', err);
     }
@@ -74,34 +66,14 @@ export default function StallReservation() {
   const loadStalls = async () => {
     try {
       setIsLoadingStalls(true);
-      const token = localStorage.getItem('token');
-      const headers = {
-        'Content-Type': 'application/json'
-      };
-      
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-      
-      const res = await fetch('http://localhost:8081/api/reservations/all', {
-        headers: headers
-      });
-      
-      if (!res.ok) {
-        setMessage(`Failed to load stalls (HTTP ${res.status})`);
-        setMessageType('error');
-        setDebugInfo('');
-        return;
-      }
-      
-      const data = await res.json();
+      const data = await reservationsApi.getAllStalls();
       console.log('Loaded stalls:', data.length, data);
       setStalls(data);
       setDebugInfo('');
       setMessage('');
     } catch (err) {
       console.error('Failed to load stalls:', err);
-      setMessage('Failed to load stalls. Please check if the backend is running.');
+      setMessage(err.message || 'Failed to load stalls. Please check if the backend is running.');
       setMessageType('error');
       setDebugInfo('');
     } finally {
@@ -111,15 +83,7 @@ export default function StallReservation() {
 
   const loadMapLayout = async () => {
     try {
-      const res = await fetch('http://localhost:8081/api/reservations/map-layout');
-      if (!res.ok) {
-        console.log('No saved map layout found, using SVG fallback');
-        setUseSavedMap(false);
-        setMapLayout(null);
-        return;
-      }
-      
-      const data = await res.json();
+      const data = await reservationsApi.getMapLayout();
       
       // Check for error in response
       if (data.error) {
@@ -149,7 +113,12 @@ export default function StallReservation() {
         setMapLayout(null);
       }
     } catch (err) {
-      console.error('Failed to load map layout:', err);
+      // 404 or other errors are expected if no layout exists
+      if (err.status !== 404) {
+        console.error('Failed to load map layout:', err);
+      } else {
+        console.log('No saved map layout found, using SVG fallback');
+      }
       setUseSavedMap(false);
       setMapLayout(null);
     }
@@ -278,29 +247,15 @@ export default function StallReservation() {
     setMessageType('');
     
     try {
-      const token = localStorage.getItem('token');
       let successCount = 0;
       let errorMessages = [];
       
       for (const stall of selectedStalls) {
         try {
-          const res = await fetch('http://localhost:8081/api/reservations/reserve', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ stallId: stall.id })
-          });
-          
-          const data = await res.json();
-          if (res.ok) {
-            successCount++;
-          } else {
-            errorMessages.push(`${stall.name}: ${data.error || 'Failed'}`);
-          }
+          await reservationsApi.reserveStall(stall.id);
+          successCount++;
         } catch (err) {
-          errorMessages.push(`${stall.name}: Connection error`);
+          errorMessages.push(`${stall.name}: ${err.message || 'Failed'}`);
         }
       }
       
@@ -574,47 +529,15 @@ export default function StallReservation() {
                   />
                 </div>
               ) : (
-                <div className="w-full overflow-auto border-2 border-gray-300 rounded-xl bg-white shadow-inner">
-                  <svg 
-                    ref={svgRef}
-                    version="1.1" 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    xmlnsXlink="http://www.w3.org/1999/xlink" 
-                    viewBox="0 0 2528 2825" 
-                    className="w-full h-auto"
-                    preserveAspectRatio="xMidYMid meet"
-                    style={{ position: 'relative', minHeight: '650px' }}
-                  >
-                  <defs>
-                    <filter id="blur-stroke" x="-50%" y="-50%" width="200%" height="200%">
-                      <feGaussianBlur stdDeviation="3" />
-                    </filter>
-                  </defs>
-
-                  {/* Background image */}
-                  <image 
-                    href="/MAP NEW.jpg" 
-                    x="0" 
-                    y="0" 
-                    width="2528" 
-                    height="2825"
-                    preserveAspectRatio="xMidYMid meet"
-                    style={{ pointerEvents: 'none' }}
-                  />
-
-                  {/* Fallback message when no saved map is available */}
-                  <text 
-                    x="1264" 
-                    y="1412" 
-                    textAnchor="middle" 
-                    fontSize="28" 
-                    fill="#666"
-                    fontWeight="bold"
-                    style={{ pointerEvents: 'none' }}
-                  >
-                    Please design a map in the admin panel to view stalls
-                  </text>
-                  </svg>
+                <div className="w-full border-2 border-gray-300 rounded-xl bg-white shadow-inner flex items-center justify-center" style={{ minHeight: '650px' }}>
+                  <div className="text-center p-8">
+                    <svg className="w-24 h-24 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                    </svg>
+                    <h3 className="text-2xl font-bold text-gray-700 mb-2">Map Not Configured</h3>
+                    <p className="text-gray-600 mb-4">Please configure the map in the Map Designer to view stalls.</p>
+                    <p className="text-sm text-gray-500">Go to Admin Panel → Map Designer to set up the map layout.</p>
+                  </div>
                 </div>
               )}
             </div>

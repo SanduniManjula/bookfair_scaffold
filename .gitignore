@@ -24,3 +24,7 @@ Thumbs.db
 # Service management
 logs/
 .service-pids
+
+# Documentation files (markdown) - exclude all .md files
+*.md
+**/*.md
