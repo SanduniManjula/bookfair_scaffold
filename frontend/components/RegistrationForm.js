@@ -87,7 +87,7 @@ export default function RegistrationForm() {
         username: form.businessName, // username maps to business_name column in DB
         email: form.email,
         password: form.password,
-        genres: JSON.stringify(additionalInfo), // Store contactPerson, phone, address as JSON in genres field
+        // Don't send genres field - let it be null/empty until user adds genres
       };
 
       const res = await fetch("http://localhost:8081/api/auth/register", {
