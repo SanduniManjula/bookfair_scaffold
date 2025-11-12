@@ -9,8 +9,15 @@ public class ServiceConfig {
     @Value("${user.service.url:http://localhost:8081}")
     private String userServiceUrl;
 
+    @Value("${reservation.service.url:http://localhost:8082}")
+    private String reservationServiceUrl;
+
     public String getUserServiceUrl() {
         return userServiceUrl;
+    }
+
+    public String getReservationServiceUrl() {
+        return reservationServiceUrl;
     }
 }
 

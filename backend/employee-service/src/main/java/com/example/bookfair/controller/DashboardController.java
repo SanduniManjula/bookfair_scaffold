@@ -25,7 +25,7 @@ public class DashboardController {
     @GetMapping("/stalls")
     public ResponseEntity<?> getAllStalls(Authentication authentication) {
         try {
-            String url = serviceConfig.getUserServiceUrl() + "/api/reservations/all";
+            String url = serviceConfig.getReservationServiceUrl() + "/api/reservations/all";
             ResponseEntity<Object[]> response = restTemplate.getForEntity(url, Object[].class);
             return ResponseEntity.ok(response.getBody());
         } catch (Exception e) {

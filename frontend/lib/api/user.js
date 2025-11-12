@@ -1,7 +1,7 @@
 /**
  * User API endpoints
  */
-import apiClient from './client';
+import apiClient from './auth-client';
 
 export const userApi = {
   /**

@@ -4,7 +4,7 @@
  * Uses environment variable for base URL configuration
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
+const API_BASE_URL = 'http://localhost:8081';
 
 /**
  * Get authentication token from localStorage

@@ -1,7 +1,7 @@
 /**
  * Reservations API endpoints
  */
-import apiClient from './client';
+import apiClient from './reservation-client';
 
 export const reservationsApi = {
   /**
