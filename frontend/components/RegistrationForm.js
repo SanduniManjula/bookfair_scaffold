@@ -87,17 +87,20 @@ export default function RegistrationForm() {
         username: form.businessName.trim(), // username maps to business_name column in DB
         email: form.email.trim().toLowerCase(), // Normalize email
         password: form.password,
-        genres: "", // Leave genres empty - user can add them later on the home page
+        // Don't send genres field - let it be null/empty until user adds genres
       };
 
-      // Ensure all required fields are present and valid
-      if (!registrationData.username || !registrationData.email || !registrationData.password) {
-        setError("Please fill in all required fields");
-        setIsSubmitting(false);
-        return;
-      }
+      const res = await fetch("http://localhost:8081/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(registrationData),
+      });
 
-      const data = await authApi.register(registrationData);
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        throw new Error(data.error || "Registration failed");
+      }
 
       // Show success message
       setSuccess(true);
