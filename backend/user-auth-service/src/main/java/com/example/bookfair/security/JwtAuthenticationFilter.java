@@ -1,5 +1,6 @@
 package com.example.bookfair.user.security;
 
+import com.example.bookfair.security.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

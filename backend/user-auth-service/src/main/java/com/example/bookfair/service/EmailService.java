@@ -1,4 +1,4 @@
-package com.example.bookfair.util;
+package com.example.bookfair.service;
 
 import com.example.bookfair.user.model.Reservation;
 import com.example.bookfair.user.model.Stall;
@@ -100,3 +100,4 @@ public class EmailService {
     }
 
 }
+

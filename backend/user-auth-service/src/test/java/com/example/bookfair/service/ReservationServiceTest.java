@@ -11,7 +11,7 @@ import com.example.bookfair.user.model.User;
 import com.example.bookfair.user.repository.ReservationRepository;
 import com.example.bookfair.user.repository.StallRepository;
 import com.example.bookfair.user.repository.UserRepository;
-import com.example.bookfair.util.EmailService;
+import com.example.bookfair.service.EmailService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -1,4 +1,4 @@
-package com.example.bookfair.user.security;
+package com.example.bookfair.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
