@@ -90,6 +90,7 @@ export default function EmployeeDashboard() {
       )}
 
       <button onClick={() => {
+        
         localStorage.removeItem("employee");
         localStorage.removeItem("employeeToken");
         router.push("/employee-login");

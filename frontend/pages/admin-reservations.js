@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import adminApi from '../lib/api/admin';
+import { useAuth } from "../context/AuthContext";
 
 export default function AdminReservations() {
   const router = useRouter();
@@ -26,6 +27,8 @@ export default function AdminReservations() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+
+  const { logout } = useAuth();
 
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
@@ -309,6 +312,7 @@ export default function AdminReservations() {
               </button>
               <button
                 onClick={() => {
+                  logout();
                   localStorage.removeItem('user');
                   localStorage.removeItem('token');
                   router.push('/login');

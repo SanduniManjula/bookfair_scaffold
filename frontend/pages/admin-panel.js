@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import adminApi from '../lib/api/admin';
+import { useAuth } from "../context/AuthContext";
 
 export default function AdminPanel() {
   const router = useRouter();
@@ -11,11 +12,13 @@ export default function AdminPanel() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [activeTab, setActiveTab] = useState('stats'); // 'stats', 'users', 'reservations'
-
+  const { logout } = useAuth();
+  
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
     const token = localStorage.getItem('token');
     
+
     if (!savedUser || !token) {
       router.push('/login');
       return;
@@ -130,7 +133,7 @@ export default function AdminPanel() {
           <button onClick={() => router.push('/home')} style={styles.backButton}>
             Back to Home
           </button>
-          <button onClick={() => { localStorage.clear(); router.push('/login'); }} style={styles.logoutButton}>
+          <button onClick={() => { logout(); localStorage.clear(); router.push('/login'); }} style={styles.logoutButton}>
             Logout
           </button>
         </div>

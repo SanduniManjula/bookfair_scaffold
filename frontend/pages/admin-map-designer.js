@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import adminApi from '../lib/api/admin';
 import ToolsSidebar from '../components/ToolsSidebar';
 import EditStallModal from '../components/EditStallModal';
+import { useAuth } from "../context/AuthContext";
 
 // Dynamically import MapCanvas to avoid SSR issues with react-konva
 const MapCanvas = dynamic(() => import('../components/MapCanvas'), {
@@ -22,6 +23,7 @@ export default function AdminMapDesigner() {
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
+  const { logout } = useAuth();
 
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
@@ -226,6 +228,7 @@ export default function AdminMapDesigner() {
                   localStorage.removeItem('user');
                   localStorage.removeItem('token');
                   router.push('/login');
+                  logout();
                 }}
                 className="text-red-600 hover:text-red-800 px-3 py-2 rounded-md text-sm font-medium"
               >
