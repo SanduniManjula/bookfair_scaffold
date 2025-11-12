@@ -48,7 +48,19 @@ async function handleResponse(response) {
   }
 
   if (!response.ok) {
-    const error = new Error(data.error || data.message || `HTTP ${response.status}: ${response.statusText}`);
+    // Extract error message from backend response
+    let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+    
+    if (data) {
+      // Backend returns ErrorResponse with 'error' and 'message' fields
+      if (data.message) {
+        errorMessage = data.message;
+      } else if (data.error) {
+        errorMessage = data.error;
+      }
+    }
+    
+    const error = new Error(errorMessage);
     error.status = response.status;
     error.data = data;
     throw error;

@@ -33,6 +33,10 @@ export default function RegistrationForm() {
     // Required fields
     if (!form.businessName.trim()) {
       newErrors.businessName = "Business name is required";
+    } else if (form.businessName.trim().length < 2) {
+      newErrors.businessName = "Business name must be at least 2 characters";
+    } else if (form.businessName.trim().length > 100) {
+      newErrors.businessName = "Business name must not exceed 100 characters";
     }
     if (!form.contactPerson.trim()) {
       newErrors.contactPerson = "Contact person is required";
@@ -85,11 +89,18 @@ export default function RegistrationForm() {
       };
 
       const registrationData = {
-        username: form.businessName, // username maps to business_name column in DB
-        email: form.email,
+        username: form.businessName.trim(), // username maps to business_name column in DB
+        email: form.email.trim().toLowerCase(), // Normalize email
         password: form.password,
         genres: JSON.stringify(additionalInfo), // Store contactPerson, phone, address as JSON in genres field
       };
+
+      // Ensure all required fields are present and valid
+      if (!registrationData.username || !registrationData.email || !registrationData.password) {
+        setError("Please fill in all required fields");
+        setIsSubmitting(false);
+        return;
+      }
 
       const data = await authApi.register(registrationData);
 
@@ -101,7 +112,25 @@ export default function RegistrationForm() {
         router.push("/login");
       }, 3000);
     } catch (err) {
-      setError(err.message);
+      // Extract error message from backend response
+      let errorMessage = err.message || "Registration failed. Please try again.";
+      
+      // If the error has data from the backend, use that message
+      if (err.data) {
+        if (err.data.message) {
+          errorMessage = err.data.message;
+        } else if (err.data.error) {
+          errorMessage = err.data.error;
+        }
+      }
+      
+      // Log full error for debugging (only in development)
+      if (process.env.NODE_ENV === 'development') {
+        console.error("Registration error:", err);
+        console.error("Error data:", err.data);
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

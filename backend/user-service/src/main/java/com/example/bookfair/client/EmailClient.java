@@ -16,3 +16,4 @@ public interface EmailClient {
     Map<String, Object> sendWelcomeEmail(@RequestBody Map<String, Object> request);
 }
 
+
