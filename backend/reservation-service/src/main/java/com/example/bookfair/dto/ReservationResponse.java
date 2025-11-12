@@ -10,6 +10,7 @@ public class ReservationResponse {
     private Long stallId;
     private String stallName;
     private String stallSize;
+    private String stallGenres;
     private LocalDateTime createdAt;
     private String qrCodeFilename;
 
@@ -22,6 +23,17 @@ public class ReservationResponse {
         this.stallId = stallId;
         this.stallName = stallName;
         this.stallSize = stallSize;
+        this.createdAt = createdAt;
+        this.qrCodeFilename = qrCodeFilename;
+    }
+
+    public ReservationResponse(Long id, Long stallId, String stallName, String stallSize, 
+                               String stallGenres, LocalDateTime createdAt, String qrCodeFilename) {
+        this.id = id;
+        this.stallId = stallId;
+        this.stallName = stallName;
+        this.stallSize = stallSize;
+        this.stallGenres = stallGenres;
         this.createdAt = createdAt;
         this.qrCodeFilename = qrCodeFilename;
     }
@@ -73,6 +85,14 @@ public class ReservationResponse {
 
     public void setQrCodeFilename(String qrCodeFilename) {
         this.qrCodeFilename = qrCodeFilename;
+    }
+
+    public String getStallGenres() {
+        return stallGenres;
+    }
+
+    public void setStallGenres(String stallGenres) {
+        this.stallGenres = stallGenres;
     }
 }
 

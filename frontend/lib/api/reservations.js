@@ -31,6 +31,13 @@ export const reservationsApi = {
   async getMapLayout() {
     return apiClient.get('/api/reservations/map-layout');
   },
+
+  /**
+   * Save stall genres
+   */
+  async saveStallGenres(stallGenres) {
+    return apiClient.post('/api/reservations/save-stall-genres', { stallGenres });
+  },
 };
 
 export default reservationsApi;

@@ -189,6 +189,47 @@ public class ReservationService {
     }
 
     /**
+     * Save stall genres
+     */
+    @Transactional
+    public void saveStallGenres(List<Map<String, Object>> stallGenresList, String userEmail) {
+        // Verify user owns the stalls by checking reservations
+        for (Map<String, Object> stallGenreData : stallGenresList) {
+            Object stallIdObj = stallGenreData.get("stallId");
+            String genresStr = (String) stallGenreData.get("genres");
+            
+            if (stallIdObj == null || genresStr == null) {
+                continue;
+            }
+            
+            Long stallId;
+            if (stallIdObj instanceof Integer) {
+                stallId = ((Integer) stallIdObj).longValue();
+            } else if (stallIdObj instanceof Long) {
+                stallId = (Long) stallIdObj;
+            } else {
+                continue;
+            }
+            
+            // Verify user has a reservation for this stall
+            boolean hasReservation = reservationRepository.findByUserEmail(userEmail).stream()
+                    .anyMatch(r -> r.getStall().getId().equals(stallId));
+            
+            if (!hasReservation) {
+                throw new BadRequestException("You don't have a reservation for stall " + stallId);
+            }
+            
+            // Update stall genres
+            Stall stall = stallRepository.findById(stallId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Stall not found"));
+            stall.setGenres(genresStr);
+            stallRepository.save(stall);
+        }
+        
+        logger.info("Updated genres for {} stalls for user: {}", stallGenresList.size(), userEmail);
+    }
+
+    /**
      * Convert Stall entity to StallResponse DTO
      */
     private StallResponse toStallResponse(Stall stall) {
@@ -198,7 +239,8 @@ public class ReservationService {
                 stall.getSize(),
                 stall.isReserved(),
                 stall.getX(),
-                stall.getY()
+                stall.getY(),
+                stall.getGenres() != null ? stall.getGenres() : ""
         );
     }
 
@@ -211,6 +253,7 @@ public class ReservationService {
                 reservation.getStall().getId(),
                 reservation.getStall().getName(),
                 reservation.getStall().getSize(),
+                reservation.getStall().getGenres() != null ? reservation.getStall().getGenres() : "",
                 reservation.getCreatedAt(),
                 reservation.getQrCodeFilename()
         );
