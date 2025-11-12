@@ -74,5 +74,18 @@ public class JwtUtil {
         final String tokenUsername = extractUsername(token);
         return (tokenUsername.equals(username) && !isTokenExpired(token));
     }
+
+    /**
+     * Extract role from JWT token claims
+     */
+    public String extractRole(String token) {
+        try {
+            Claims claims = extractAllClaims(token);
+            Object roleObj = claims.get("role");
+            return roleObj != null ? roleObj.toString() : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }
 

@@ -17,6 +17,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -42,7 +44,12 @@ public class AdminController {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private com.example.bookfair.security.JwtUtil jwtUtil;
+
     // Helper method to check if user is admin
+    // First tries to get role from JWT token (faster, more reliable)
+    // Falls back to user-service call if token doesn't have role
     private boolean isAdmin(Authentication authentication) {
         if (authentication == null) {
             logger.warn("Authentication is null - cannot check admin status");
@@ -50,6 +57,28 @@ public class AdminController {
         }
         String email = authentication.getName();
         logger.debug("Checking admin status for user: {}", email);
+        
+        // Try to get role from JWT token first (from request header)
+        try {
+            jakarta.servlet.http.HttpServletRequest request = 
+                ((org.springframework.web.context.request.ServletRequestAttributes) 
+                    org.springframework.web.context.request.RequestContextHolder.getRequestAttributes())
+                    .getRequest();
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                String token = authHeader.substring(7);
+                String role = jwtUtil.extractRole(token);
+                if (role != null) {
+                    boolean isAdmin = "ADMIN".equals(role);
+                    logger.debug("User {} has role from token: {}, isAdmin: {}", email, role, isAdmin);
+                    return isAdmin;
+                }
+            }
+        } catch (Exception e) {
+            logger.debug("Could not extract role from token, falling back to user-service: {}", e.getMessage());
+        }
+        
+        // Fallback: get role from user-service
         try {
             UserResponse user = userClient.getUserByEmail(email);
             if (user == null) {
@@ -57,7 +86,7 @@ public class AdminController {
                 return false;
             }
             boolean isAdmin = "ADMIN".equals(user.getRole());
-            logger.debug("User {} has role: {}, isAdmin: {}", email, user.getRole(), isAdmin);
+            logger.debug("User {} has role from user-service: {}, isAdmin: {}", email, user.getRole(), isAdmin);
             return isAdmin;
         } catch (Exception e) {
             logger.error("Failed to check admin status for user {}: {}", email, e.getMessage(), e);
