@@ -6,10 +6,9 @@ import com.example.bookfair.exception.ResourceNotFoundException;
 import com.example.bookfair.user.model.Reservation;
 import com.example.bookfair.user.model.Stall;
 import com.example.bookfair.user.model.User;
+import com.example.bookfair.client.EmailClient;
 import com.example.bookfair.user.repository.ReservationRepository;
 import com.example.bookfair.user.repository.StallRepository;
-import com.example.bookfair.user.repository.UserRepository;
-import com.example.bookfair.service.EmailService;
 import com.example.bookfair.util.QrUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,12 +16,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.example.bookfair.client.UserClient;
+
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.HashMap;
+
 
 /**
  * Service for reservation business logic
@@ -39,10 +43,10 @@ public class ReservationService {
     private StallRepository stallRepository;
 
     @Autowired
-    private UserRepository userRepository;
+    private UserClient userClient;
 
     @Autowired
-    private EmailService emailService;
+    private EmailClient emailClient;
 
     @Value("${qr.code.directory:./qr-codes}")
     private String qrDirectory;
@@ -74,10 +78,13 @@ public class ReservationService {
      */
     @Transactional
     public ReservationCreateResponse createReservation(Long stallId, String userEmail) {
-        User user = userRepository.findByEmail(userEmail)
+
+        // Get user from UserClient as Optional<User>
+        User user = userClient.getUserByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         Long userId = user.getId();
+        String userEmailFromService = user.getEmail();
 
         // Check if user already has maximum reservations
         long count = reservationRepository.countByUserId(userId);
@@ -104,7 +111,7 @@ public class ReservationService {
 
         // Send reservation request email (non-blocking)
         try {
-            emailService.sendReservationRequestEmail(user, stall, reservation);
+            emailClient.sendReservationRequestEmail(user.getEmail(), stall.getName(), reservation.getId());
         } catch (Exception e) {
             logger.warn("Failed to send reservation request email: {}", e.getMessage());
         }
@@ -114,9 +121,8 @@ public class ReservationService {
 
         // Send confirmation email with QR code (non-blocking)
         try {
-            Path qrPath = Paths.get(qrDirectory).resolve(qrFilename);
-            String absoluteQrPath = qrPath.toAbsolutePath().toString();
-            emailService.sendReservationConfirmation(user, stall, reservation, absoluteQrPath);
+            String qrPath = Paths.get(qrDirectory, qrFilename).toAbsolutePath().toString();
+            emailClient.sendReservationConfirmationEmail(user.getEmail(), stall.getName(), reservation.getId(), qrPath);
         } catch (Exception e) {
             logger.warn("Failed to send confirmation email: {}", e.getMessage());
         }
@@ -129,11 +135,12 @@ public class ReservationService {
         );
     }
 
+
     /**
      * Get user's reservations
      */
     public List<ReservationResponse> getUserReservations(String userEmail) {
-        User user = userRepository.findByEmail(userEmail)
+        User user = userClient.getUserByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         List<Reservation> reservations = reservationRepository.findByUser(user);

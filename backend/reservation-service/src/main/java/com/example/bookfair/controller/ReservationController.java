@@ -11,15 +11,29 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import com.example.bookfair.client.UserClient;
+import com.example.bookfair.user.model.User;
+import com.example.bookfair.user.model.Reservation;
+import com.example.bookfair.user.model.Stall;
+import com.example.bookfair.user.repository.ReservationRepository;
+import com.example.bookfair.user.repository.StallRepository;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.HashMap;
+import java.util.stream.Collectors;
+import java.time.LocalDateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 @RestController
 @RequestMapping("/api/reservations")
 public class ReservationController {
+
+    private static final Logger logger = LoggerFactory.getLogger(ReservationController.class);
 
     @Autowired
     private ReservationService reservationService;
@@ -28,7 +42,24 @@ public class ReservationController {
     private MapLayoutRepository mapLayoutRepository;
 
     @Autowired
+    private ReservationRepository reservationRepository;
+
+    @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private UserClient userClient;
+
+    @Autowired
+    private StallRepository stallRepository;
+
+    // Helper method to check if user is admin
+    private boolean isAdmin(Authentication authentication) {
+        if (authentication == null) return false;
+        String email = authentication.getName();
+        Optional<User> userOpt = userClient.getUserByEmail(email);
+        return userOpt.isPresent() && "ADMIN".equals(userOpt.get().getRole());
+    }
 
     @GetMapping("/available")
     public ResponseEntity<List<StallResponse>> availableStalls() {
@@ -353,122 +384,6 @@ public class ReservationController {
             logger.error("Failed to save map layout: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to save map layout: " + e.getMessage()));
-        }
-    }
-
-
-    
-    // Clear all reservations and reset stall statuses
-    @DeleteMapping("/clear-reservations")
-    public ResponseEntity<?> clearAllReservations(Authentication authentication) {
-        if (!isAdmin(authentication)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "Admin access required"));
-        }
-
-        try {
-            // Get all reservations
-            List<Reservation> allReservations = reservationRepository.findAll();
-            long count = allReservations.size();
-
-            // Delete all reservations
-            reservationRepository.deleteAll();
-
-            // Reset all stalls to unreserved status
-            List<com.example.bookfair.user.model.Stall> allStalls = stallRepository.findAll();
-            for (com.example.bookfair.user.model.Stall stall : allStalls) {
-                stall.setReserved(false);
-                stallRepository.save(stall);
-            }
-
-            return ResponseEntity.ok(Map.of(
-                "message", "All reservations cleared successfully",
-                "deletedReservations", count,
-                "resetStalls", allStalls.size()
-            ));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to clear reservations: " + e.getMessage()));
-        }
-    }
-
-    // Clear all data (reservations, map layouts, and optionally users)
-    @DeleteMapping("/clear-all-data")
-    public ResponseEntity<?> clearAllData(
-            Authentication authentication,
-            @RequestParam(defaultValue = "false") boolean includeUsers) {
-        if (!isAdmin(authentication)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "Admin access required"));
-        }
-
-        try {
-            // Delete all reservations
-            long reservationCount = reservationRepository.count();
-            reservationRepository.deleteAll();
-
-            // Reset all stalls to unreserved status
-            List<com.example.bookfair.user.model.Stall> allStalls = stallRepository.findAll();
-            for (com.example.bookfair.user.model.Stall stall : allStalls) {
-                stall.setReserved(false);
-                stallRepository.save(stall);
-            }
-
-            // Delete all map layouts
-            long mapLayoutCount = mapLayoutRepository.count();
-            mapLayoutRepository.deleteAll();
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "All data cleared successfully");
-            response.put("deletedReservations", reservationCount);
-            response.put("resetStalls", allStalls.size());
-            response.put("deletedMapLayouts", mapLayoutCount);
-
-            // Optionally delete users (except admins)
-            if (includeUsers) {
-                List<User> nonAdminUsers = userRepository.findAll().stream()
-                    .filter(u -> !"ADMIN".equals(u.getRole()))
-                    .collect(Collectors.toList());
-                long userCount = nonAdminUsers.size();
-                userRepository.deleteAll(nonAdminUsers);
-                response.put("deletedUsers", userCount);
-            }
-
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to clear data: " + e.getMessage()));
-        }
-    }
-
-    // Delete all stalls (stalls are now created when map is saved)
-    @DeleteMapping("/delete-all-stalls")
-    public ResponseEntity<?> deleteAllStalls(Authentication authentication) {
-        if (!isAdmin(authentication)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "Admin access required"));
-        }
-
-        try {
-            // Delete all reservations first (they reference stalls)
-            long reservationCount = reservationRepository.count();
-            reservationRepository.deleteAll();
-            
-            // Delete all existing stalls
-            long existingCount = stallRepository.count();
-            stallRepository.deleteAll();
-            
-            logger.info("Deleted all stalls and reservations - Stalls: {}, Reservations: {}", existingCount, reservationCount);
-            return ResponseEntity.ok(Map.of(
-                "message", "All stalls and reservations deleted successfully",
-                "deletedStalls", existingCount,
-                "deletedReservations", reservationCount,
-                "note", "Stalls will be created automatically when you save a map layout."
-            ));
-        } catch (Exception e) {
-            logger.error("Failed to delete stalls: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to delete stalls: " + e.getMessage()));
         }
     }
 }
