@@ -76,5 +76,20 @@ public class ReservationController {
                     .body(Map.of("error", "Failed to parse map layout: " + e.getMessage()));
         }
     }
+
+    // Save stall genres
+    @PostMapping("/save-stall-genres")
+    public ResponseEntity<Map<String, Object>> saveStallGenres(@RequestBody Map<String, List<Map<String, Object>>> request, Authentication authentication) {
+        String userEmail = authentication.getName();
+        List<Map<String, Object>> stallGenresList = request.get("stallGenres");
+        
+        if (stallGenresList == null || stallGenresList.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "No stall genres provided"));
+        }
+
+        reservationService.saveStallGenres(stallGenresList, userEmail);
+        return ResponseEntity.ok(Map.of("message", "Genres saved successfully"));
+    }
 }
 

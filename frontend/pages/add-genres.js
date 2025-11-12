@@ -175,7 +175,7 @@ export default function AddGenres() {
       }));
 
       // Save genres using API client
-      await userApi.saveStallGenres(genresData);
+      await reservationsApi.saveStallGenres(genresData);
       
       setMessage(`Genres ${isEditMode ? 'updated' : 'saved'} successfully!`);
       setMessageType('success');

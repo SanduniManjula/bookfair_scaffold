@@ -10,6 +10,7 @@ public class StallResponse {
     private boolean reserved;
     private int x;
     private int y;
+    private String genres;
 
     public StallResponse() {
     }
@@ -21,6 +22,16 @@ public class StallResponse {
         this.reserved = reserved;
         this.x = x;
         this.y = y;
+    }
+
+    public StallResponse(Long id, String name, String size, boolean reserved, int x, int y, String genres) {
+        this.id = id;
+        this.name = name;
+        this.size = size;
+        this.reserved = reserved;
+        this.x = x;
+        this.y = y;
+        this.genres = genres;
     }
 
     // Getters and Setters
@@ -70,6 +81,14 @@ public class StallResponse {
 
     public void setY(int y) {
         this.y = y;
+    }
+
+    public String getGenres() {
+        return genres;
+    }
+
+    public void setGenres(String genres) {
+        this.genres = genres;
     }
 }
 
