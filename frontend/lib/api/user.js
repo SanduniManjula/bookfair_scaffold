@@ -17,6 +17,13 @@ export const userApi = {
   async updateGenres(email, genres) {
     return apiClient.post('/api/user/genres', { email, genres });
   },
+
+  /**
+   * Save stall genres
+   */
+  async saveStallGenres(stallGenres) {
+    return apiClient.post('/api/user/save-stall-genres', { stallGenres });
+  },
 };
 
 export default userApi;

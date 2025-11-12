@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import reservationsApi from '../lib/api/reservations';
+import userApi from '../lib/api/user';
 
 export default function AddGenres() {
   const router = useRouter();
@@ -62,42 +64,34 @@ export default function AddGenres() {
   const loadStalls = async (ids) => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
       const stallIdArray = ids.split(',');
       
-      // Fetch all stalls
-      const res = await fetch('http://localhost:8081/api/reservations/all', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      // Fetch all stalls using API client
+      const allStalls = await reservationsApi.getAllStalls();
       
-      if (res.ok) {
-        const allStalls = await res.json();
-        // Filter to get only the reserved stalls
-        const reservedStalls = allStalls.filter(stall => 
-          stallIdArray.includes(stall.id.toString())
-        );
-        setStalls(reservedStalls);
+      // Filter to get only the reserved stalls
+      const reservedStalls = allStalls.filter(stall => 
+        stallIdArray.includes(stall.id.toString())
+      );
+      setStalls(reservedStalls);
+      
+      // Initialize stallGenres state with existing genres
+      const initialGenres = {};
+      reservedStalls.forEach(stall => {
+        // Pre-fill with existing genres if available
+        const existingGenres = stall.genres 
+          ? stall.genres.split(',').map(g => g.trim()).filter(g => g)
+          : [];
         
-        // Initialize stallGenres state with existing genres
-        const initialGenres = {};
-        reservedStalls.forEach(stall => {
-          // Pre-fill with existing genres if available
-          const existingGenres = stall.genres 
-            ? stall.genres.split(',').map(g => g.trim()).filter(g => g)
-            : [];
-          
-          initialGenres[stall.id] = {
-            selectedGenres: existingGenres,
-            customGenre: ''
-          };
-        });
-        setStallGenres(initialGenres);
-      }
+        initialGenres[stall.id] = {
+          selectedGenres: existingGenres,
+          customGenre: ''
+        };
+      });
+      setStallGenres(initialGenres);
     } catch (err) {
       console.error('Failed to load stalls:', err);
-      setMessage('Failed to load stalls. Please try again.');
+      setMessage(err.message || 'Failed to load stalls. Please try again.');
       setMessageType('error');
     } finally {
       setLoading(false);
@@ -170,7 +164,8 @@ export default function AddGenres() {
     setMessageType('');
 
     try {
-      const token = localStorage.getItem('token');
+      // Check if any stall has existing genres (edit mode)
+      const isEditMode = stalls.some(stall => stall.genres && stall.genres.trim());
       
       // Prepare data for backend
       const genresData = stalls.map(stall => ({
@@ -179,31 +174,18 @@ export default function AddGenres() {
         genres: (stallGenres[stall.id]?.selectedGenres || []).join(', ')
       }));
 
-      // Save genres
-      const res = await fetch('http://localhost:8081/api/user/save-stall-genres', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ stallGenres: genresData })
-      });
-
-      if (res.ok) {
-        setMessage(`Genres ${isEditMode ? 'updated' : 'saved'} successfully!`);
-        setMessageType('success');
-        
-        // Redirect to home page after 2 seconds
-        setTimeout(() => {
-          router.push('/home');
-        }, 2000);
-      } else {
-        const data = await res.json();
-        setMessage(data.error || 'Failed to save genres');
-        setMessageType('error');
-      }
+      // Save genres using API client
+      await userApi.saveStallGenres(genresData);
+      
+      setMessage(`Genres ${isEditMode ? 'updated' : 'saved'} successfully!`);
+      setMessageType('success');
+      
+      // Redirect to home page after 2 seconds
+      setTimeout(() => {
+        router.push('/home');
+      }, 2000);
     } catch (err) {
-      setMessage('Failed to connect to server');
+      setMessage(err.message || 'Failed to save genres. Please try again.');
       setMessageType('error');
     } finally {
       setSaving(false);
