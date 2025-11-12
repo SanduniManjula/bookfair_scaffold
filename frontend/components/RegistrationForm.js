@@ -87,7 +87,7 @@ export default function RegistrationForm() {
         username: form.businessName.trim(), // username maps to business_name column in DB
         email: form.email.trim().toLowerCase(), // Normalize email
         password: form.password,
-        genres: "", // Leave genres empty - user can add them later on the home page
+        // Don't send genres field - let it be null/empty until user adds genres
       };
 
       // Ensure all required fields are present and valid

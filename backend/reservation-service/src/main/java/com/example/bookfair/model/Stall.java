@@ -13,6 +13,10 @@ public class Stall {
     // coordinates could be added for map visualization
     private int x;
     private int y;
+    
+    // Genres for this stall (comma-separated)
+    @Column(length = 500)
+    private String genres;
 
     // Getters and Setters
     public Long getId() {
@@ -61,5 +65,13 @@ public class Stall {
 
     public void setY(int y) {
         this.y = y;
+    }
+
+    public String getGenres() {
+        return genres;
+    }
+
+    public void setGenres(String genres) {
+        this.genres = genres;
     }
 }
