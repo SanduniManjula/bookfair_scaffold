@@ -56,19 +56,6 @@ export default function NavbarWithUser() {
     return router.pathname === path;
   };
 
-  const handleSmoothScroll = (e, targetId) => {
-    e.preventDefault();
-    if (router.pathname === '/') {
-      const element = document.getElementById(targetId);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    } else {
-      router.push(`/#${targetId}`);
-    }
-    setMobileMenuOpen(false);
-  };
-
   const isAdmin = user?.role === 'ADMIN';
 
   return (
@@ -106,7 +93,7 @@ export default function NavbarWithUser() {
                   : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
               }`}
             >
-              Reserve Stalls
+              {isAdmin ? 'View Reserved Stalls' : 'Reserve Stalls'}
             </button>
             {isAdmin && (
               <button
@@ -259,7 +246,7 @@ export default function NavbarWithUser() {
                     : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
                 }`}
               >
-                Reserve Stalls
+                {isAdmin ? 'View Reserved Stalls' : 'Reserve Stalls'}
               </button>
               {isAdmin && (
                 <button

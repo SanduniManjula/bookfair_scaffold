@@ -96,36 +96,36 @@ start_backend_service() {
 }
 
 # Function to start frontend
-start_frontend() {
-    print_service "Starting frontend on port 3000..."
+# start_frontend() {
+#     print_service "Starting frontend on port 3000..."
     
-    if check_port 3000; then
-        print_warning "Port 3000 is already in use. Skipping frontend"
-        return 1
-    fi
+#     if check_port 3000; then
+#         print_warning "Port 3000 is already in use. Skipping frontend"
+#         return 1
+#     fi
     
-    cd "$FRONTEND_DIR"
+#     cd "$FRONTEND_DIR"
     
-    # Check if node_modules exists
-    if [ ! -d "node_modules" ]; then
-        print_message "Installing frontend dependencies..."
-        npm install
-    fi
+#     # Check if node_modules exists
+#     if [ ! -d "node_modules" ]; then
+#         print_message "Installing frontend dependencies..."
+#         npm install
+#     fi
     
-    npm run dev > "$PROJECT_ROOT/logs/frontend.log" 2>&1 &
-    local pid=$!
-    echo $pid >> "$PID_FILE"
-    print_message "Frontend started with PID $pid (port 3000)"
+#     npm run dev > "$PROJECT_ROOT/logs/frontend.log" 2>&1 &
+#     local pid=$!
+#     echo $pid >> "$PID_FILE"
+#     print_message "Frontend started with PID $pid (port 3000)"
     
-    sleep 3
+#     sleep 3
     
-    if ! kill -0 $pid 2>/dev/null; then
-        print_error "Frontend failed to start. Check logs/frontend.log"
-        return 1
-    fi
+#     if ! kill -0 $pid 2>/dev/null; then
+#         print_error "Frontend failed to start. Check logs/frontend.log"
+#         return 1
+#     fi
     
-    return 0
-}
+#     return 0
+# }
 
 # Cleanup function
 cleanup() {
