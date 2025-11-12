@@ -103,6 +103,13 @@
       <scope>runtime</scope>
     </dependency>
 
+    <!-- OpenFeign for service-to-service communication -->
+    <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-starter-openfeign</artifactId>
+      <version>4.0.4</version>
+    </dependency>
+
     <!--Testing -->
     <dependency>
       <groupId>org.springframework.boot</groupId>

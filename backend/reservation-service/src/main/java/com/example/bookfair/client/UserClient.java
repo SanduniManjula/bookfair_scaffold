@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 @FeignClient(name = "user-service", url = "${user.service.url:http://localhost:8081}")
 public interface UserClient {
     
-    @GetMapping("/api/users/{id}")
+    @GetMapping("/api/user/{id}")
     UserResponse getUserById(@PathVariable Long id);
     
-    @GetMapping("/api/users/email/{email}")
+    @GetMapping("/api/user/email/{email}")
     UserResponse getUserByEmail(@PathVariable String email);
 }
 

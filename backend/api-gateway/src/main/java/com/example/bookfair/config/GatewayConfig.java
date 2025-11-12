@@ -43,15 +43,17 @@ public class GatewayConfig {
                         .filters(f -> f
                                 .preserveHostHeader()
                                 .dedupeResponseHeader("Access-Control-Allow-Origin", "RETAIN_FIRST")
+                                // Authorization header is forwarded by default in Spring Cloud Gateway
                         )
                         .uri(userServiceUrl)
                 )
                 // Reservation Service routes (reservations, stalls, map layouts)
                 .route("reservation-service", r -> r
-                        .path("/api/reservations/**", "/api/admin/reservations/**", "/api/admin/stalls/**", "/api/admin/map-layout/**", "/api/admin/clear-reservations", "/api/admin/clear-all-data", "/api/admin/delete-all-stalls")
+                        .path("/api/reservations/**", "/api/admin/reservations/**", "/api/admin/stalls/**", "/api/admin/map-layout/**", "/api/admin/debug-auth", "/api/admin/clear-reservations", "/api/admin/clear-all-data", "/api/admin/delete-all-stalls")
                         .filters(f -> f
                                 .preserveHostHeader()
                                 .dedupeResponseHeader("Access-Control-Allow-Origin", "RETAIN_FIRST")
+                                // Authorization header is forwarded by default in Spring Cloud Gateway
                         )
                         .uri(reservationServiceUrl)
                 )

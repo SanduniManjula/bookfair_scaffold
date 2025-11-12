@@ -44,13 +44,23 @@ public class AdminController {
 
     // Helper method to check if user is admin
     private boolean isAdmin(Authentication authentication) {
-        if (authentication == null) return false;
+        if (authentication == null) {
+            logger.warn("Authentication is null - cannot check admin status");
+            return false;
+        }
         String email = authentication.getName();
+        logger.debug("Checking admin status for user: {}", email);
         try {
             UserResponse user = userClient.getUserByEmail(email);
-            return user != null && "ADMIN".equals(user.getRole());
+            if (user == null) {
+                logger.warn("User not found for email: {}", email);
+                return false;
+            }
+            boolean isAdmin = "ADMIN".equals(user.getRole());
+            logger.debug("User {} has role: {}, isAdmin: {}", email, user.getRole(), isAdmin);
+            return isAdmin;
         } catch (Exception e) {
-            logger.warn("Failed to check admin status for user {}: {}", email, e.getMessage());
+            logger.error("Failed to check admin status for user {}: {}", email, e.getMessage(), e);
             return false;
         }
     }
@@ -125,10 +135,27 @@ public class AdminController {
         return ResponseEntity.ok(Map.of("message", "Reservation deleted successfully"));
     }
 
+    // Debug endpoint to check authentication status
+    @GetMapping("/debug-auth")
+    public ResponseEntity<?> debugAuth(Authentication authentication) {
+        Map<String, Object> debugInfo = new HashMap<>();
+        debugInfo.put("authenticationPresent", authentication != null);
+        if (authentication != null) {
+            debugInfo.put("username", authentication.getName());
+            debugInfo.put("authorities", authentication.getAuthorities().toString());
+            debugInfo.put("details", authentication.getDetails() != null ? authentication.getDetails().toString() : "null");
+        }
+        debugInfo.put("isAdmin", isAdmin(authentication));
+        return ResponseEntity.ok(debugInfo);
+    }
+
     // Get map layout
     @GetMapping("/map-layout")
     public ResponseEntity<?> getMapLayout(Authentication authentication) {
+        logger.info("GET /api/admin/map-layout - Authentication: {}", authentication != null ? authentication.getName() : "null");
         if (!isAdmin(authentication)) {
+            logger.warn("GET /api/admin/map-layout - Access denied for user: {}", 
+                    authentication != null ? authentication.getName() : "null");
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("error", "Access denied. Admin role required."));
         }
@@ -177,7 +204,10 @@ public class AdminController {
     public ResponseEntity<?> saveMapLayout(
             @RequestBody Map<String, Object> request,
             Authentication authentication) {
+        logger.info("POST /api/admin/map-layout - Authentication: {}", authentication != null ? authentication.getName() : "null");
         if (!isAdmin(authentication)) {
+            logger.warn("POST /api/admin/map-layout - Access denied for user: {}", 
+                    authentication != null ? authentication.getName() : "null");
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("error", "Access denied. Admin role required."));
         }

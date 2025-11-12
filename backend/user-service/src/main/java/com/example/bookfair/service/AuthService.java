@@ -5,7 +5,7 @@ import com.example.bookfair.exception.BadRequestException;
 import com.example.bookfair.user.model.User;
 import com.example.bookfair.user.repository.UserRepository;
 import com.example.bookfair.security.JwtUtil;
-import com.example.bookfair.service.EmailService;
+import com.example.bookfair.client.EmailClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -34,7 +35,7 @@ public class AuthService {
     private JwtUtil jwtUtil;
 
     @Autowired
-    private EmailService emailService;
+    private EmailClient emailClient;
 
     /**
      * Register a new user
@@ -57,9 +58,12 @@ public class AuthService {
 
         userRepository.save(user);
 
-        // Send welcome email (non-blocking)
+        // Send welcome email via email-service (non-blocking)
         try {
-            emailService.sendWelcomeEmail(user);
+            Map<String, Object> emailRequest = new HashMap<>();
+            emailRequest.put("email", user.getEmail());
+            emailRequest.put("username", user.getUsername());
+            emailClient.sendWelcomeEmail(emailRequest);
         } catch (Exception e) {
             logger.warn("Failed to send welcome email for {}: {}", user.getEmail(), e.getMessage());
         }

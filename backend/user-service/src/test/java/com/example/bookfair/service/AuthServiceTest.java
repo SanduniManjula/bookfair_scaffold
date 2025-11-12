@@ -7,7 +7,7 @@ import com.example.bookfair.exception.BadRequestException;
 import com.example.bookfair.user.model.User;
 import com.example.bookfair.user.repository.UserRepository;
 import com.example.bookfair.security.JwtUtil;
-import com.example.bookfair.service.EmailService;
+import com.example.bookfair.client.EmailClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,7 +37,7 @@ class AuthServiceTest {
     private JwtUtil jwtUtil;
 
     @Mock
-    private EmailService emailService;
+    private EmailClient emailClient;
 
     @InjectMocks
     private AuthService authService;
@@ -83,7 +83,7 @@ class AuthServiceTest {
         verify(userRepository).findByEmail("test@example.com");
         verify(encoder).encode("password123");
         verify(userRepository).save(any(User.class));
-        verify(emailService, times(1)).sendWelcomeEmail(any(User.class));
+        verify(emailClient, times(1)).sendWelcomeEmail(any(Map.class));
     }
 
     @Test

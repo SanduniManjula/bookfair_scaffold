@@ -29,6 +29,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
+                        // Allow internal service-to-service calls for user lookup
+                        // These endpoints are used by other services (e.g., reservation-service) to fetch user data
+                        // Note: This allows /api/user/email/{email} and /api/user/{id} for service-to-service calls
+                        // /api/user/profile and /api/user/genres still require authentication (handled by controller)
+                        .requestMatchers("/api/user/email/**").permitAll()
+                        .requestMatchers("/api/user/**").permitAll()
                         .requestMatchers("/api/admin/users/**").authenticated()
                         .anyRequest().authenticated()
                 )
