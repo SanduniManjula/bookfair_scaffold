@@ -81,18 +81,13 @@ export default function RegistrationForm() {
     try {
       // Prepare data for backend
       // Backend User model expects: username (maps to business_name), email, password, genres (optional)
-      // Store additional fields in genres as JSON for now
-      const additionalInfo = {
-        contactPerson: form.contactPerson,
-        phone: form.phone,
-        address: form.address,
-      };
-
+      // Note: Contact info (contactPerson, phone, address) is not stored in the database
+      // as the User model doesn't have these fields. They can be added later if needed.
       const registrationData = {
         username: form.businessName.trim(), // username maps to business_name column in DB
         email: form.email.trim().toLowerCase(), // Normalize email
         password: form.password,
-        genres: JSON.stringify(additionalInfo), // Store contactPerson, phone, address as JSON in genres field
+        genres: "", // Leave genres empty - user can add them later on the home page
       };
 
       // Ensure all required fields are present and valid

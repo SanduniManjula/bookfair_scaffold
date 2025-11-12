@@ -32,7 +32,23 @@ export default function Home() {
       setIsLoading(true);
       const data = await userApi.getProfile();
       if (data.genres) {
-        setGenres(data.genres);
+        // Check if genres is JSON (from old registration) or plain text
+        let genresText = data.genres;
+        try {
+          const parsed = JSON.parse(data.genres);
+          // If it's an object with contactPerson, phone, address, it's old format
+          if (parsed.contactPerson || parsed.phone || parsed.address) {
+            // This is contact info stored in genres field, clear it
+            genresText = "";
+          } else {
+            // It's valid JSON but not contact info, use as is
+            genresText = data.genres;
+          }
+        } catch (e) {
+          // Not JSON, use as plain text
+          genresText = data.genres;
+        }
+        setGenres(genresText);
       }
       // Update user data with latest from server
       setUser(prevUser => ({
@@ -64,9 +80,27 @@ export default function Home() {
     setIsSaving(true);
 
     try {
-      await userApi.updateGenres(user.email, genres);
+      // Ensure genres is plain text, not JSON
+      let genresToSave = genres.trim();
+      
+      // Validate: if it looks like JSON with contact info, reject it
+      try {
+        const parsed = JSON.parse(genresToSave);
+        if (parsed.contactPerson || parsed.phone || parsed.address) {
+          setMessage("Invalid genres format. Please enter genres as plain text, separated by commas.");
+          setMessageType("error");
+          setIsSaving(false);
+          return;
+        }
+      } catch (e) {
+        // Not JSON, which is good - proceed with saving
+      }
+      
+      await userApi.updateGenres(user.email, genresToSave);
       setMessage("Genres updated successfully! 🎉");
       setMessageType("success");
+      // Refresh profile to get updated data
+      fetchUserProfile();
       // Clear message after 5 seconds
       setTimeout(() => {
         setMessage("");
@@ -237,21 +271,38 @@ export default function Home() {
           )}
 
           {/* Display current genres if they exist */}
-          {genres && (
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">Current Genres:</h3>
-              <div className="flex flex-wrap gap-2">
-                {genres.split(",").map((genre, index) => (
-                  <span
-                    key={index}
-                    className="px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
-                  >
-                    {genre.trim()}
-                  </span>
-                ))}
+          {genres && genres.trim() && (() => {
+            // Check if genres is JSON (old format with contact info)
+            let genresToDisplay = [];
+            try {
+              const parsed = JSON.parse(genres);
+              // If it's an object with contactPerson, don't display it as genres
+              if (parsed.contactPerson || parsed.phone || parsed.address) {
+                genresToDisplay = [];
+              } else {
+                genresToDisplay = [genres]; // Valid JSON but not contact info
+              }
+            } catch (e) {
+              // Not JSON, split by comma
+              genresToDisplay = genres.split(",").filter(g => g.trim());
+            }
+            
+            return genresToDisplay.length > 0 ? (
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <h3 className="text-sm font-semibold text-gray-700 mb-3">Current Genres:</h3>
+                <div className="flex flex-wrap gap-2">
+                  {genresToDisplay.map((genre, index) => (
+                    <span
+                      key={index}
+                      className="px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
+                    >
+                      {genre.trim()}
+                    </span>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            ) : null;
+          })()}
         </div>
 
         {/* Quick Stats or Info Cards */}
