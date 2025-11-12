@@ -36,7 +36,7 @@ public class DashboardController {
     @GetMapping("/reservations")
     public ResponseEntity<?> getAllReservations(Authentication authentication) {
         try {
-            // This would need to be implemented in user-auth-service
+            // This would need to be implemented in user-service
             // For now, return a placeholder
             return ResponseEntity.ok(Collections.emptyList());
         } catch (Exception e) {

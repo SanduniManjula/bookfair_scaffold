@@ -58,11 +58,10 @@ else
 fi
 
 # Also try to stop by port (in case PID file is missing)
-kill_port 8081  # user-auth-service
+kill_port 8081  # user-service
 kill_port 8082  # reservation-service
 kill_port 8083  # email-service
-kill_port 8084  # qr-service
-kill_port 8085  # employee-service
+kill_port 8084  # employee-service
 kill_port 3000  # frontend
 
 # Kill any Java processes that might be Spring Boot apps

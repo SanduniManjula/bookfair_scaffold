@@ -1,13 +1,13 @@
-package com.example.bookfair.reservation;
+package com.example.bookfair;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 
-@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class, HibernateJpaAutoConfiguration.class})
-public class ReservationService {
+@SpringBootApplication
+@EnableFeignClients
+public class ReservationServiceApplication {
     public static void main(String[] args) {
-        SpringApplication.run(ReservationService.class, args);
+        SpringApplication.run(ReservationServiceApplication.class, args);
     }
 }

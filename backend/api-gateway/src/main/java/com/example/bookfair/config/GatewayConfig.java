@@ -16,31 +16,44 @@ public class GatewayConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(GatewayConfig.class);
 
-    @Value("${gateway.services.user-auth:http://localhost:8081}")
-    private String userAuthServiceUrl;
+    @Value("${gateway.services.user:http://localhost:8081}")
+    private String userServiceUrl;
+
+    @Value("${gateway.services.reservation:http://localhost:8082}")
+    private String reservationServiceUrl;
 
     @Value("${gateway.services.email:http://localhost:8083}")
     private String emailServiceUrl;
 
-    @Value("${gateway.services.employee:http://localhost:8085}")
+    @Value("${gateway.services.employee:http://localhost:8084}")
     private String employeeServiceUrl;
 
     @Bean
     public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
         logger.info("Configuring API Gateway routes:");
-        logger.info("  - User Auth Service: {}", userAuthServiceUrl);
+        logger.info("  - User Service: {}", userServiceUrl);
+        logger.info("  - Reservation Service: {}", reservationServiceUrl);
         logger.info("  - Email Service: {}", emailServiceUrl);
         logger.info("  - Employee Service: {}", employeeServiceUrl);
 
         return builder.routes()
-                // User Auth Service routes
-                .route("user-auth-service", r -> r
-                        .path("/api/auth/**", "/api/user/**", "/api/reservations/**", "/api/admin/**")
+                // User Service routes (authentication and user management)
+                .route("user-service", r -> r
+                        .path("/api/auth/**", "/api/user/**", "/api/admin/users/**")
                         .filters(f -> f
                                 .preserveHostHeader()
                                 .dedupeResponseHeader("Access-Control-Allow-Origin", "RETAIN_FIRST")
                         )
-                        .uri(userAuthServiceUrl)
+                        .uri(userServiceUrl)
+                )
+                // Reservation Service routes (reservations, stalls, map layouts)
+                .route("reservation-service", r -> r
+                        .path("/api/reservations/**", "/api/admin/reservations/**", "/api/admin/stalls/**", "/api/admin/map-layout/**", "/api/admin/clear-reservations", "/api/admin/clear-all-data", "/api/admin/delete-all-stalls")
+                        .filters(f -> f
+                                .preserveHostHeader()
+                                .dedupeResponseHeader("Access-Control-Allow-Origin", "RETAIN_FIRST")
+                        )
+                        .uri(reservationServiceUrl)
                 )
                 // Email Service routes
                 .route("email-service", r -> r

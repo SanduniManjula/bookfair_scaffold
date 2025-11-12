@@ -155,11 +155,10 @@ echo ""
 
 # Start backend services
 start_backend_service "api-gateway" 8080
-start_backend_service "user-auth-service" 8081
+start_backend_service "user-service" 8081
 start_backend_service "reservation-service" 8082
 start_backend_service "email-service" 8083
-start_backend_service "qr-service" 8084
-start_backend_service "employee-service" 8085
+start_backend_service "employee-service" 8084
 
 echo ""
 
@@ -171,11 +170,10 @@ print_message "All services started successfully!"
 echo ""
 print_message "Service URLs:"
 print_service "  - API Gateway:          http://localhost:8080"
-print_service "  - User Auth Service:    http://localhost:8081"
+print_service "  - User Service:         http://localhost:8081"
 print_service "  - Reservation Service:  http://localhost:8082"
 print_service "  - Email Service:        http://localhost:8083"
-print_service "  - QR Service:           http://localhost:8084"
-print_service "  - Employee Service:     http://localhost:8085"
+print_service "  - Employee Service:     http://localhost:8084"
 print_service "  - Frontend:             http://localhost:3000"
 echo ""
 print_message "Logs are available in: $PROJECT_ROOT/logs/"
