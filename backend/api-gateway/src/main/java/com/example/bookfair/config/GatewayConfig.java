@@ -43,6 +43,9 @@ public class GatewayConfig {
                         .filters(f -> f
                                 .preserveHostHeader()
                                 .dedupeResponseHeader("Access-Control-Allow-Origin", "RETAIN_FIRST")
+                                .dedupeResponseHeader("Access-Control-Allow-Methods", "RETAIN_FIRST")
+                                .dedupeResponseHeader("Access-Control-Allow-Headers", "RETAIN_FIRST")
+                                .dedupeResponseHeader("Access-Control-Allow-Credentials", "RETAIN_FIRST")
                                 // Authorization header is forwarded by default in Spring Cloud Gateway
                         )
                         .uri(userServiceUrl)
