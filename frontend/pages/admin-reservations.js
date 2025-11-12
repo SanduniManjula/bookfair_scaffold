@@ -196,22 +196,11 @@ export default function AdminReservations() {
   const handleApprove = async (reservationId) => {
     try {
       const token = localStorage.getItem('token');
-      // TODO: Backend needs to implement PATCH /api/admin/reservations/:id/approve
       // For now, we'll just show a message
       setMessage('Approve functionality requires backend implementation. Please contact the development team.');
       setMessageType('error');
       setTimeout(() => setMessage(''), 5000);
       
-      // Once backend is ready, uncomment:
-      // const res = await fetch(`http://localhost:8081/api/admin/reservations/${reservationId}/approve`, {
-      //   method: 'PATCH',
-      //   headers: { 'Authorization': `Bearer ${token}` }
-      // });
-      // if (res.ok) {
-      //   setMessage('Reservation approved successfully!');
-      //   setMessageType('success');
-      //   loadData();
-      // }
     } catch (err) {
       setMessage('Failed to approve reservation.');
       setMessageType('error');

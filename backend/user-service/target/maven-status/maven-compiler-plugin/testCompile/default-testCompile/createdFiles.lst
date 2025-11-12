@@ -1,4 +1,4 @@
-com/example/bookfair/controller/AuthControllerTest.class
-com/example/bookfair/exception/GlobalExceptionHandlerTest.class
-com/example/bookfair/service/AuthServiceTest.class
-com/example/bookfair/integration/AuthIntegrationTest.class
+com\example\bookfair\integration\AuthIntegrationTest.class
+com\example\bookfair\controller\AuthControllerTest.class
+com\example\bookfair\service\AuthServiceTest.class
+com\example\bookfair\exception\GlobalExceptionHandlerTest.class
