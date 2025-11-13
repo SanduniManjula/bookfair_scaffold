@@ -35,7 +35,7 @@ public class SecurityConfig {
                         // /api/user/profile and /api/user/genres still require authentication (handled by controller)
                         .requestMatchers("/api/user/email/**").permitAll()
                         .requestMatchers("/api/user/**").permitAll()
-                        .requestMatchers("/api/admin/users/**").authenticated()
+                        .requestMatchers("/api/admin/users/**", "/api/admin/stats").authenticated()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

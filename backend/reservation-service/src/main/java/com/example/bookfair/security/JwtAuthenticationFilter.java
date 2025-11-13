@@ -34,7 +34,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // Skip JWT processing for public endpoints
         if (path.startsWith("/api/reservations/available") || 
             path.startsWith("/api/reservations/all") ||
-            path.startsWith("/api/reservations/map-layout")) {
+            path.startsWith("/api/reservations/map-layout") ||
+            path.equals("/api/admin/stats-internal")) {
             chain.doFilter(request, response);
             return;
         }

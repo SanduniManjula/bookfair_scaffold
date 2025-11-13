@@ -39,7 +39,7 @@ public class GatewayConfig {
         return builder.routes()
                 // User Service routes (authentication and user management)
                 .route("user-service", r -> r
-                        .path("/api/auth/**", "/api/user/**", "/api/admin/users/**")
+                        .path("/api/auth/**", "/api/user/**", "/api/admin/users/**", "/api/admin/stats")
                         .filters(f -> f
                                 .preserveHostHeader()
                                 .dedupeResponseHeader("Access-Control-Allow-Origin", "RETAIN_FIRST")
@@ -52,7 +52,7 @@ public class GatewayConfig {
                 )
                 // Reservation Service routes (reservations, stalls, map layouts)
                 .route("reservation-service", r -> r
-                        .path("/api/reservations/**", "/api/admin/reservations/**", "/api/admin/stalls/**","/api/admin/stats/**", "/api/admin/map-layout/**", "/api/admin/debug-auth", "/api/admin/clear-reservations", "/api/admin/clear-all-data", "/api/admin/delete-all-stalls")
+                        .path("/api/reservations/**", "/api/admin/reservations/**", "/api/admin/stalls/**", "/api/admin/map-layout/**", "/api/admin/debug-auth", "/api/admin/clear-reservations", "/api/admin/clear-all-data", "/api/admin/delete-all-stalls")
                         .filters(f -> f
                                 .preserveHostHeader()
                                 .dedupeResponseHeader("Access-Control-Allow-Origin", "RETAIN_FIRST")

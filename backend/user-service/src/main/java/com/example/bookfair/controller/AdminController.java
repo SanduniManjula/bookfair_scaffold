@@ -1,5 +1,6 @@
 package com.example.bookfair.user.controller;
 
+import com.example.bookfair.client.ReservationClient;
 import com.example.bookfair.user.model.User;
 import com.example.bookfair.user.repository.UserRepository;
 import org.slf4j.Logger;
@@ -25,6 +26,9 @@ public class AdminController {
 
     @Autowired
     private BCryptPasswordEncoder encoder;
+
+    @Autowired
+    private ReservationClient reservationClient;
 
     // Helper method to check if user is admin
     private boolean isAdmin(Authentication authentication) {
@@ -118,7 +122,7 @@ public class AdminController {
         return ResponseEntity.ok(Map.of("message", "User deleted successfully. Note: Reservations should be deleted separately via reservation-service."));
     }
 
-    // Get statistics (user-related only)
+    // Get statistics (combines user and reservation statistics)
     @GetMapping("/stats")
     public ResponseEntity<?> getStats(Authentication authentication) {
         if (!isAdmin(authentication)) {
@@ -132,11 +136,25 @@ public class AdminController {
                 .count();
         long regularUsers = totalUsers - adminUsers;
 
-        return ResponseEntity.ok(Map.of(
-                "totalUsers", totalUsers,
-                "adminUsers", adminUsers,
-                "regularUsers", regularUsers,
-                "note", "Reservation statistics are available via reservation-service /api/admin/stats"
-        ));
+        // Create response map
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("totalUsers", totalUsers);
+        stats.put("adminUsers", adminUsers);
+        stats.put("regularUsers", regularUsers);
+
+        // Try to fetch reservation statistics from reservation-service
+        try {
+            Map<String, Object> reservationStats = reservationClient.getReservationStats();
+            stats.putAll(reservationStats);
+        } catch (Exception e) {
+            logger.error("Failed to fetch reservation stats: {}", e.getMessage());
+            stats.put("totalReservations", 0);
+            stats.put("totalStalls", 0);
+            stats.put("reservedStalls", 0);
+            stats.put("availableStalls", 0);
+            stats.put("reservationStatsError", "Unable to fetch reservation statistics");
+        }
+
+        return ResponseEntity.ok(stats);
     }
 }
