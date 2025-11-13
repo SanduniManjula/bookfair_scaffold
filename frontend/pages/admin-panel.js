@@ -114,7 +114,12 @@ export default function AdminPanel() {
   if (loading) {
     return (
       <div style={styles.container}>
-        <p>Loading admin panel...</p>
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+            <p className="text-gray-600 text-lg">Loading admin panel...</p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -122,7 +127,7 @@ export default function AdminPanel() {
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <h1>Admin Panel</h1>
+        {/* <h1>Admin Panel</h1> */}
         <div style={styles.headerActions}>
           <button onClick={() => router.push('/admin-map-designer')} style={{...styles.backButton, marginRight: '10px', backgroundColor: '#4F46E5'}}>
             Map Designer
@@ -168,7 +173,7 @@ export default function AdminPanel() {
 
       {activeTab === 'stats' && stats && (
         <div style={styles.statsContainer}>
-          <h2>Dashboard Statistics</h2>
+          {/* <h2>Dashboard Statistics</h2> */}
           <div style={styles.statsGrid}>
             <div style={styles.statCard}>
               <h3 style={styles.statCardH3}>{stats.totalUsers}</h3>
@@ -192,7 +197,7 @@ export default function AdminPanel() {
 
       {activeTab === 'users' && (
         <div style={styles.tableContainer}>
-          <h2>User Management</h2>
+          {/* <h2>User Management</h2> */}
           <table style={styles.table}>
             <thead>
               <tr>
@@ -221,7 +226,7 @@ export default function AdminPanel() {
                       <option value="ADMIN">ADMIN</option>
                     </select>
                   </td>
-                  <td style={styles.tableTd}>{u.reservationCount}</td>
+                  <td style={styles.tableTd}>{typeof u.reservationCount !== "undefined" ? u.reservationCount : 0}</td>
                   <td style={styles.tableTd}>{new Date(u.createdAt).toLocaleString()}</td>
                   <td style={styles.tableTd}>
                     <button
@@ -241,7 +246,7 @@ export default function AdminPanel() {
 
       {activeTab === 'reservations' && (
         <div style={styles.tableContainer}>
-          <h2>Reservation Management</h2>
+          {/* <h2>Reservation Management</h2> */}
           <table style={styles.table}>
             <thead>
               <tr>
@@ -306,7 +311,7 @@ const styles = {
   },
   header: {
     display: 'flex',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     alignItems: 'center',
     marginBottom: '20px',
     paddingBottom: '20px',

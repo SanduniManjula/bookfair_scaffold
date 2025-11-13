@@ -482,5 +482,51 @@ public class AdminController {
                     .body(Map.of("error", "Failed to delete stalls: " + e.getMessage()));
         }
     }
+
+    // Get reservation statistics (internal endpoint for user-service)
+    @GetMapping("/stats-internal")
+    public ResponseEntity<?> getReservationStats() {
+        try {
+            long totalReservations = reservationRepository.count();
+            long totalStalls = stallRepository.count();
+            long reservedStalls = stallRepository.findAll().stream()
+                    .filter(Stall::isReserved)
+                    .count();
+            long availableStalls = totalStalls - reservedStalls;
+
+            return ResponseEntity.ok(Map.of(
+                    "totalReservations", totalReservations,
+                    "totalStalls", totalStalls,
+                    "reservedStalls", reservedStalls,
+                    "availableStalls", availableStalls
+            ));
+        } catch (Exception e) {
+            logger.error("Failed to get reservation stats: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to get reservation stats: " + e.getMessage()));
+        }
+    }
+
+    // Get reservation counts per user (internal endpoint for user-service)
+    @GetMapping("/user-counts-internal")
+    public ResponseEntity<?> getReservationCountsByUser() {
+        try {
+            List<Reservation> allReservations = reservationRepository.findAll();
+            
+            // Group reservations by userId and count them
+            Map<Long, Long> userReservationCounts = allReservations.stream()
+                    .filter(r -> r.getUserId() != null)
+                    .collect(java.util.stream.Collectors.groupingBy(
+                            Reservation::getUserId,
+                            java.util.stream.Collectors.counting()
+                    ));
+
+            return ResponseEntity.ok(userReservationCounts);
+        } catch (Exception e) {
+            logger.error("Failed to get user reservation counts: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to get user reservation counts: " + e.getMessage()));
+        }
+    }
 }
 
