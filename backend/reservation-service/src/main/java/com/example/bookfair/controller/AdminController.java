@@ -506,5 +506,27 @@ public class AdminController {
                     .body(Map.of("error", "Failed to get reservation stats: " + e.getMessage()));
         }
     }
+
+    // Get reservation counts per user (internal endpoint for user-service)
+    @GetMapping("/user-counts-internal")
+    public ResponseEntity<?> getReservationCountsByUser() {
+        try {
+            List<Reservation> allReservations = reservationRepository.findAll();
+            
+            // Group reservations by userId and count them
+            Map<Long, Long> userReservationCounts = allReservations.stream()
+                    .filter(r -> r.getUserId() != null)
+                    .collect(java.util.stream.Collectors.groupingBy(
+                            Reservation::getUserId,
+                            java.util.stream.Collectors.counting()
+                    ));
+
+            return ResponseEntity.ok(userReservationCounts);
+        } catch (Exception e) {
+            logger.error("Failed to get user reservation counts: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to get user reservation counts: " + e.getMessage()));
+        }
+    }
 }
 

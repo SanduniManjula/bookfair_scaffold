@@ -10,4 +10,7 @@ public interface ReservationClient {
     
     @GetMapping("/api/admin/stats-internal")
     Map<String, Object> getReservationStats();
+    
+    @GetMapping("/api/admin/user-counts-internal")
+    Map<Long, Long> getReservationCountsByUser();
 }

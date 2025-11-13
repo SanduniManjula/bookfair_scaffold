@@ -193,7 +193,7 @@ export default function ViewStallReservation() {
             <div className="flex items-center space-x-4">
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl px-6 py-3 border border-blue-200">
                 <div className="text-sm text-gray-600 mb-1">Available Stalls</div>
-                <div className="text-2xl font-bold text-blue-600">{allReservationsCount} / {allStallCount}</div>
+                <div className="text-2xl font-bold text-blue-600">{allStallCount - allReservationsCount} / {allStallCount}</div>
               </div>
               
             </div>

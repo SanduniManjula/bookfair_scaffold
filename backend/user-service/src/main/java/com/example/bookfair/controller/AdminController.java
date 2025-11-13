@@ -47,6 +47,16 @@ public class AdminController {
         }
 
         List<User> users = userRepository.findAll();
+        
+        // Fetch reservation counts from reservation-service
+        Map<Long, Long> reservationCounts = new HashMap<>();
+        try {
+            reservationCounts = reservationClient.getReservationCountsByUser();
+        } catch (Exception e) {
+            logger.error("Failed to fetch reservation counts: {}", e.getMessage());
+        }
+        
+        final Map<Long, Long> finalReservationCounts = reservationCounts;
         List<Map<String, Object>> userList = users.stream()
                 .map(user -> {
                     Map<String, Object> userMap = new HashMap<>();
@@ -56,7 +66,7 @@ public class AdminController {
                     userMap.put("role", user.getRole());
                     userMap.put("genres", user.getGenres());
                     userMap.put("createdAt", user.getCreatedAt());
-                    // Note: Reservation count would need to be fetched from reservation-service
+                    userMap.put("reservationCount", finalReservationCounts.getOrDefault(user.getId(), 0L));
                     return userMap;
                 })
                 .collect(Collectors.toList());
