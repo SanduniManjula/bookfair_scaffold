@@ -250,6 +250,7 @@ export default function AdminPanel() {
                 <th style={styles.tableTh}>Email</th>
                 <th style={styles.tableTh}>Stall</th>
                 <th style={styles.tableTh}>Size</th>
+                <th style={styles.tableTh}>Genres</th>
                 <th style={styles.tableTh}>Created At</th>
                 <th style={styles.tableTh}>QR Code</th>
                 <th style={styles.tableTh}>Actions</th>
@@ -263,6 +264,19 @@ export default function AdminPanel() {
                   <td style={styles.tableTd}>{r.userEmail}</td>
                   <td style={styles.tableTd}>{r.stallName}</td>
                   <td style={styles.tableTd}>{r.stallSize}</td>
+                  <td style={styles.tableTd}>
+                    {r.stallGenres ? (
+                      <div style={styles.genresContainer}>
+                        {r.stallGenres.split(',').map((genre, idx) => (
+                          <span key={idx} style={styles.genreBadgeLightColor}>
+                            {genre.trim()}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span style={styles.noGenres}>No genres</span>
+                    )}
+                  </td>
                   <td style={styles.tableTd}>{new Date(r.createdAt).toLocaleString()}</td>
                   <td style={styles.tableTd}>{r.qrCodeFilename || 'N/A'}</td>
                   <td style={styles.tableTd}>
@@ -417,6 +431,37 @@ const styles = {
     border: 'none',
     borderRadius: '4px',
     cursor: 'not-allowed',
+    fontSize: '12px'
+  },
+  genresContainer: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '4px',
+    maxWidth: '300px'
+  },
+  genreBadge: {
+    display: 'inline-block',
+    padding: '4px 10px',
+    backgroundColor: '#4F46E5',
+    color: 'white',
+    borderRadius: '12px',
+    fontSize: '11px',
+    fontWeight: '600',
+    whiteSpace: 'nowrap'
+  },
+  genreBadgeLightColor: {
+    display: 'inline-block',
+    padding: '4px 10px',
+    backgroundColor: '#7E7D7F',
+    color: 'white',
+    borderRadius: '12px',
+    fontSize: '11px',
+    fontWeight: '600',
+    whiteSpace: 'nowrap'
+  },
+  noGenres: {
+    color: '#999',
+    fontStyle: 'italic',
     fontSize: '12px'
   }
 };

@@ -121,6 +121,7 @@ public class AdminController {
                     resMap.put("stallId", reservation.getStall().getId());
                     resMap.put("stallName", reservation.getStall().getName());
                     resMap.put("stallSize", reservation.getStall().getSize());
+                    resMap.put("stallGenres", reservation.getStall().getGenres() != null ? reservation.getStall().getGenres() : "");
                     resMap.put("createdAt", reservation.getCreatedAt());
                     resMap.put("qrCodeFilename", reservation.getQrCodeFilename());
                     return resMap;
