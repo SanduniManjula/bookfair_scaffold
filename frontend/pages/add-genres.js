@@ -211,7 +211,7 @@ export default function AddGenres() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md text-center">
-          <div className="text-5xl mb-4">📚</div>
+          <div className="text-5xl mb-4"></div>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">No Stalls Found</h2>
           <p className="text-gray-600 mb-6">
             We couldn't find any stalls to add genres to.

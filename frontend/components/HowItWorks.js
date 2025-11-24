@@ -1,17 +1,17 @@
 export default function HowItWorks() {
   const steps = [
     {
-      icon: "1️⃣",
+      icon: "1",
       title: "Register your business",
       text: "Create an account and provide your business details to get started.",
     },
     {
-      icon: "2️⃣",
+      icon: "2",
       title: "Select your preferred stall",
       text: "Browse the interactive map and choose the perfect location for your stall.",
     },
     {
-      icon: "3️⃣",
+      icon: "3",
       title: "Get your confirmation & QR pass",
       text: "Receive instant confirmation and a QR code for easy event access.",
     },

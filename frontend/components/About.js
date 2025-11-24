@@ -15,7 +15,7 @@ export default function About() {
         </div>
         <div className="flex items-center justify-center">
           <div className="w-full h-72 bg-gray-200 rounded-xl flex items-center justify-center text-6xl text-gray-400">
-            📖📚✨
+            
           </div>
         </div>
       </div>
