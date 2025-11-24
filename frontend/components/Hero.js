@@ -14,9 +14,10 @@ export default function Hero() {
 
       {/* Hero content */}
       <div className="relative z-10 max-w-4xl text-center text-white">
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight drop-shadow-lg">
+        <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight drop-shadow-lg">
           Reserve Your Stall at the Colombo International Bookfair 2025
         </h1>
+
         <p className="text-xl md:text-2xl mb-10 leading-relaxed opacity-95">
           Join Sri Lanka's largest book exhibition and showcase your collection to thousands of readers.
         </p>
