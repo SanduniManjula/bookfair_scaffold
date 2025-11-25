@@ -226,7 +226,7 @@ export default function AdminPanel() {
                       <option value="ADMIN">ADMIN</option>
                     </select>
                   </td>
-                  <td style={styles.tableTd}>{typeof u.reservationCount !== "undefined" ? u.reservationCount : 0}</td>
+                  <td style={styles.tableTd}>{u.reservationCount}</td>
                   <td style={styles.tableTd}>{new Date(u.createdAt).toLocaleString()}</td>
                   <td style={styles.tableTd}>
                     <button

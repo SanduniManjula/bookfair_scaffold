@@ -483,7 +483,7 @@ export default function MapViewCanvas({ halls, stalls, selectedStalls, onStallCl
         </Stage>
       </div>
 
-      {/* Enhanced Zoom controls */}
+      {/* Zoom controls */}
       <div className="absolute bottom-4 right-4 flex flex-col space-y-2 z-10">
         {/* Zoom Level Indicator */}
         <div className="bg-white border-2 border-gray-300 rounded-lg shadow-lg p-3 mb-2 backdrop-blur-sm bg-white/95">
