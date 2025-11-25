@@ -67,7 +67,7 @@ export default function NavbarWithUser() {
             className="flex items-center space-x-2 cursor-pointer group"
             onClick={() => router.push(user ? '/home' : '/')}
           >
-            <span className="text-2xl">📚</span>
+            <span className="text-2xl"></span>
             <span className="text-xl md:text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
               Colombo Bookfair
             </span>
