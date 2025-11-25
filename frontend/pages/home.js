@@ -95,12 +95,14 @@ export default function Home() {
                 You're now logged into the Colombo Bookfair Portal
               </p>
             </div>
+            {user?.role === "USER" && (
             <div className="flex items-center space-x-4">
               <div className="text-center px-6 py-3 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200">
                 <div className="text-2xl font-bold text-green-600">{userReservations}</div>
                 <div className="text-sm text-green-700 font-medium">Reservations</div>
               </div>
             </div>
+            )}
           </div>
         </div>
 
@@ -142,7 +144,11 @@ export default function Home() {
         </div>
 
         {/* Quick Stats or Info Cards */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+       <div
+          className={`mt-8 grid grid-cols-1 gap-6 ${
+            user?.role === "ADMIN" ? "md:grid-cols-2" : "md:grid-cols-3"
+          }`}
+        >
           <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-200">
             <div className="flex items-center justify-between">
               <div>
@@ -171,6 +177,7 @@ export default function Home() {
             </div>
           </div>
 
+          {user?.role === "USER" && (
           <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200">
             <div className="flex items-center justify-between">
               <div>
@@ -184,6 +191,7 @@ export default function Home() {
               </div>
             </div>
           </div>
+          )}
         </div>
 
         {/* Stall-wise Genres Section */}
